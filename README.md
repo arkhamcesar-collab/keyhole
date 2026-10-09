@@ -88,8 +88,40 @@ python tests/test_keyhole.py                  # offline, 16 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 ```
 
+## Use it from an agent (MCP)
+
+`keyhole_mcp.py` is a stdio MCP server implementing the raw JSON-RPC protocol —
+no `mcp` SDK, no install. An agent tool that needs a `pip install` before it can
+tell you a site is down has already failed at its one job.
+
+It exposes three tools:
+
+| Tool | Purpose |
+|---|---|
+| `fetch_page` | URL → clean markdown; names the wall if blocked. `render=true` for JS pages. |
+| `extract_links` | URL → absolutised, deduped links. |
+| `diagnose_url` | Is it up? Is it walled? Which wall? No page content returned. |
+
+Register it with any MCP client:
+
+```jsonc
+{
+  "mcpServers": {
+    "keyhole": {
+      "command": "python",
+      "args": ["/path/to/keyhole/keyhole_mcp.py"]
+    }
+  }
+}
+```
+
+Verified against Hermes Agent's native MCP client: connects in ~890ms, all three
+tools discovered. (Despite the name, `python` here is the interpreter path your
+agent runs with — use an absolute path.)
+
 ## Status
 
-`0.1.1`. The four cases in the table above are verified against live sites.
-Next: an MCP server wrapper so any agent can use it as a tool, and a
+`0.1.1`. Four live sites verified (table above); 18 offline tests green; MCP
+server exercised over the wire. Next: `main`-scoped content selection, so
+language switchers and sidebars stop reaching the top of the output, and a
 `--batch` mode reading URLs from stdin.
