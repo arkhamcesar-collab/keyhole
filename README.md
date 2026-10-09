@@ -76,6 +76,7 @@ forty times — so `batch` exists and reports *counts*, not bodies.
 ./keyhole.py batch --file urls.txt --jobs 8
 ./keyhole.py batch --render < urls.txt        # escalate whatever came back unusable
 ./keyhole.py batch --json < urls.txt          # one array of row objects
+./keyhole.py batch --out corpus/ < urls.txt   # one markdown file per URL
 ```
 
 ```
@@ -98,6 +99,28 @@ A wall is reported as `WALL <kind>`, an error as `ERR` with its reason — batch
 inherits the same rule as `fetch`: name the failure, never flatten it into a
 generic one.
 
+### Corpus mode: `--out DIR`
+
+Surveying tells you *which* pages are worth keeping; `--out` keeps them. One
+markdown file per URL, named from the URL (host + path, `www.` and `.html`
+dropped, query kept because `?id=42` is a different page, fragment dropped), with
+a `<!-- source: ... -->` line so a file read months later still knows where it
+came from. Collisions are numbered in input order, so re-running the same list
+overwrites its own files instead of spraying duplicates.
+
+```
+[3/4] ERR  https://this-host-does-not-exist.invalid
+            — URLError: <urlopen error [Errno 11001] getaddrinfo failed>
+            → this-host-does-not-exist.invalid.md
+
+3/4 ok, wrote 4 files (3 with content) to corpus/
+```
+
+A URL that was walled or errored still gets a file, headed `# FAILED` and naming
+the cause. Skipping it would leave a corpus quietly missing exactly the pages
+that needed attention — so `ls corpus/` shows the hole instead of hiding it.
+Exit code is unchanged: 0 only if every URL was `ok`.
+
 ## Library use
 
 ```python
@@ -115,12 +138,15 @@ keyhole.render("https://spa.example")   # headless Chrome, returns a Result too
 # batch, same order in as out
 for r in keyhole.run_batch(["https://a.dev", "https://b.dev"], jobs=4):
     print(r.url, r.ok, r.wall)
+
+# corpus: one markdown file per result, failures included and named
+keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ```
 
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 34 tests
+python tests/test_keyhole.py                  # offline, 45 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 ```
@@ -159,8 +185,11 @@ agent runs with — use an absolute path.)
 
 ## Status
 
-`0.2.0`. Four live sites verified (table above); 34 offline tests green; MCP
+`0.3.0`. Four live sites verified (table above); 45 offline tests green; MCP
 server exercised over the wire with all four tools; `batch` verified live over 4
-URLs. Next: `main`-scoped content selection, so language switchers and sidebars
-stop reaching the top of the output, and a `--out DIR` for batch that writes one
-markdown file per URL instead of only counting them.
+URLs, including `--out` writing a corpus of 4 files (3 with content, 1 naming its
+error) and a fragment-only duplicate landing as `-2.md`. Next: `main`-scoped
+content selection, so language switchers and sidebars stop reaching the top of the
+output — visible in the Wikipedia corpus file, where "Jump to content" and the
+language list still lead. Then `--out` over MCP, so an agent can build a corpus,
+not just survey one.

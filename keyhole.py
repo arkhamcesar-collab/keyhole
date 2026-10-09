@@ -37,7 +37,7 @@ import zlib
 from dataclasses import dataclass, field, asdict
 from html.parser import HTMLParser
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 BROWSER_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -593,6 +593,107 @@ def batch_payload(res: Result) -> dict:
             "wall": res.wall, "error": res.error}
 
 
+# ---------------------------------------------------------------- corpus output
+
+# Windows refuses these as file stems, in any case, with or without extension.
+_WIN_RESERVED = frozenset({"con", "prn", "aux", "nul"}
+                          | {f"com{i}" for i in range(1, 10)}
+                          | {f"lpt{i}" for i in range(1, 10)})
+_PAGE_EXTS = (".html", ".htm", ".xhtml", ".php", ".asp", ".aspx", ".jsp")
+_SLUG_UNSAFE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def slug_for_url(url: str, max_len: int = 80) -> str:
+    """A deterministic, filesystem-safe filename stem for a URL.
+
+    host + path (plus query, which is identity for pages like ``?id=42``),
+    lowercased with runs of unsafe characters collapsed to ``-``. The fragment
+    is dropped: ``#section`` never reaches the server, so it names the same
+    resource — and two URLs differing only by fragment collide, which
+    :func:`corpus_filename` disambiguates rather than silently merging.
+
+    The result is capped in length (Windows still counts characters in the full
+    path) and never a reserved device name.
+    """
+    p = urllib.parse.urlparse(url if "//" in url else "https://" + url)
+    host = (p.netloc or "url").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    host = host.split(":")[0]
+    rest = p.path or ""
+    for ext in _PAGE_EXTS:
+        if rest.lower().endswith(ext):
+            rest = rest[: -len(ext)]
+            break
+    if p.query:
+        rest += "-" + p.query
+    raw = (host + rest).strip("/")
+    slug = _SLUG_UNSAFE.sub("-", raw).strip("-._").lower()
+    slug = re.sub(r"-{2,}", "-", slug)
+    stem = slug[:max_len].strip("-._") or "index"
+    if stem.split(".")[0] in _WIN_RESERVED:
+        stem = "_" + stem
+    return stem
+
+
+def corpus_filename(url: str, taken: set) -> str:
+    """Filename for one URL, unique within a batch.
+
+    Collisions are resolved by input order (``-2``, ``-3``), so the same list
+    always produces the same names — a re-run overwrites its own files instead
+    of spraying ``-3``, ``-4`` duplicates.
+    """
+    stem = slug_for_url(url)
+    name = f"{stem}.md"
+    if name not in taken:
+        taken.add(name)
+        return name
+    n = 2
+    while f"{stem}-{n}.md" in taken:
+        n += 1
+    name = f"{stem}-{n}.md"
+    taken.add(name)
+    return name
+
+
+def corpus_body(res: Result) -> str:
+    """The markdown file for one result: a source line, then content or a named failure.
+
+    A URL that came back walled or errored still gets a file. Skipping it would
+    leave a corpus quietly missing the pages that most needed a human look — the
+    silent-drop failure this tool exists to prevent. The file says ``FAILED`` and
+    names the wall, so ``ls`` shows the hole instead of hiding it.
+    """
+    header = f"<!-- source: {res.url}" + (" | rendered" if res.method == "browser" else "") + " -->"
+    if res.wall or res.error or not res.ok:
+        reason = (f"WALL {res.wall['kind']}: {res.wall['why']}" if res.wall
+                  else f"ERROR: {res.error}" if res.error
+                  else f"HTTP {res.status}")
+        return f"{header}\n# FAILED — {res.url}\n\n{reason}\n"
+    parts = [header]
+    title = (res.title or "").strip()
+    body = (res.markdown or res.text or "").strip()
+    # Only add the title if the extraction didn't already lead with a heading.
+    if title and not re.match(r"#{1,2}\s", body):
+        parts.append(f"# {title}")
+    if body:
+        parts.append(body)
+    return "\n\n".join(parts) + "\n"
+
+
+def write_corpus(results: list, outdir: str) -> list:
+    """Write one ``.md`` per result into ``outdir``; return ``[(result, filename)]``."""
+    os.makedirs(outdir, exist_ok=True)
+    taken: set = set()
+    written = []
+    for res in results:
+        name = corpus_filename(res.url, taken)
+        with open(os.path.join(outdir, name), "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(corpus_body(res))
+        written.append((res, name))
+    return written
+
+
 def run_batch(urls: list, timeout: float = 25.0, do_render: bool = False,
               jobs: int = 4) -> list:
     """Fetch every URL, returning results in input order regardless of jobs.
@@ -662,6 +763,8 @@ def main(argv=None):
     b.add_argument("--timeout", type=float, default=25.0)
     b.add_argument("--jobs", type=int, default=4, help="parallel fetches (default 4, capped at 16)")
     b.add_argument("--json", action="store_true", help="emit one JSON array instead of rows")
+    b.add_argument("--out", default=None, metavar="DIR",
+                   help="write one markdown file per URL into DIR (corpus builder)")
     args = ap.parse_args(argv)
     chrome = getattr(args, "chrome", None)
     if chrome:
@@ -685,15 +788,23 @@ def main(argv=None):
             print("no URLs given — one per line on stdin, or --file PATH", file=sys.stderr)
             return 2
         results = run_batch(urls, timeout=args.timeout, do_render=args.render, jobs=args.jobs)
+        written = write_corpus(results, args.out) if args.out else []
+        names = {id(r): n for r, n in written}
         if args.json:
             print(json.dumps([batch_payload(r) for r in results], indent=2, ensure_ascii=False))
         else:
             for i, r in enumerate(results, 1):
-                print(format_batch_row(i, len(results), r))
+                row = format_batch_row(i, len(results), r)
+                if args.out:
+                    row += f"\n            → {names[id(r)]}"
+                print(row)
             note = f"{sum(1 for r in results if r.ok)}/{len(results)} ok"
             walled = sum(1 for r in results if r.wall)
             if walled:
                 note += f", {walled} walled"
+            if args.out:
+                good = sum(1 for r, _ in written if r.ok)
+                note += f", wrote {len(written)} files ({good} with content) to {args.out}"
             # Buffer order: without this the stderr summary can print before the
             # stdout rows it summarises, which reads as a contradiction.
             sys.stdout.flush()

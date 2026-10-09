@@ -230,6 +230,75 @@ class TestBatch(unittest.TestCase):
         self.assertEqual(res.method, "browser")
 
 
+class TestCorpus(unittest.TestCase):
+    """batch --out DIR: one file per URL. Offline — filenames and bodies are pure."""
+
+    def test_slug_is_filesystem_safe(self):
+        s = keyhole.slug_for_url("https://en.wikipedia.org/wiki/Cloudflare (bot)?x=1&y=2#frag")
+        self.assertRegex(s, r"^[a-z0-9._-]+$")
+        self.assertTrue(s.startswith("en.wikipedia.org-wiki-cloudflare"))
+
+    def test_slug_drops_www_and_page_extension(self):
+        self.assertEqual(keyhole.slug_for_url("https://www.example.com/a/b.html"), "example.com-a-b")
+
+    def test_slug_drops_fragment_but_keeps_query(self):
+        """A fragment names the same resource; a query can name a different page."""
+        self.assertEqual(keyhole.slug_for_url("https://a.dev/p#s2"), "a.dev-p")
+        self.assertNotEqual(keyhole.slug_for_url("https://a.dev/p?id=1"),
+                            keyhole.slug_for_url("https://a.dev/p?id=2"))
+
+    def test_slug_never_a_reserved_windows_name(self):
+        """Only an exact stem ('con', not 'con-prn') is illegal on Windows."""
+        self.assertEqual(keyhole.slug_for_url("https://con"), "_con")
+        self.assertEqual(keyhole.slug_for_url("https://nul/x"), "nul-x")
+        self.assertEqual(keyhole.slug_for_url("https://con/prn"), "con-prn")
+
+    def test_slug_is_length_capped_for_windows_paths(self):
+        s = keyhole.slug_for_url("https://a.dev/" + "segment/" * 60)
+        self.assertLessEqual(len(s), 80)
+
+    def test_collisions_are_numbered_by_input_order(self):
+        taken = set()
+        self.assertEqual(keyhole.corpus_filename("https://a.dev/p#one", taken), "a.dev-p.md")
+        self.assertEqual(keyhole.corpus_filename("https://a.dev/p#two", taken), "a.dev-p-2.md")
+        self.assertEqual(keyhole.corpus_filename("https://a.dev/p#three", taken), "a.dev-p-3.md")
+
+    def test_body_carries_source_and_content(self):
+        r = keyhole.Result(url="https://x.dev", status=200, title="Hi", markdown="# Hi\n\nbody")
+        body = keyhole.corpus_body(r)
+        self.assertIn("<!-- source: https://x.dev -->", body)
+        self.assertIn("body", body)
+        # The extraction already led with the title: no doubled H1.
+        self.assertEqual(body.count("# Hi"), 1)
+
+    def test_body_adds_title_when_extraction_had_none(self):
+        r = keyhole.Result(url="https://x.dev", status=200, title="Hi", markdown="body text")
+        self.assertIn("# Hi", keyhole.corpus_body(r))
+
+    def test_body_names_a_wall_instead_of_writing_an_empty_file(self):
+        """The whole point: a walled page leaves a visible hole, not a silent one."""
+        r = keyhole.Result(url="https://x.dev", status=403,
+                           wall={"kind": "cloudflare_1010", "why": "bad UA"})
+        body = keyhole.corpus_body(r)
+        self.assertIn("FAILED", body)
+        self.assertIn("WALL cloudflare_1010", body)
+
+    def test_body_names_an_error(self):
+        r = keyhole.Result(url="https://x.dev", error="URLError: timed out")
+        self.assertIn("ERROR: URLError: timed out", keyhole.corpus_body(r))
+
+    def test_write_corpus_writes_every_url_including_failures(self):
+        import tempfile
+        results = [keyhole.Result(url="https://a.dev/x", status=200, markdown="hello"),
+                   keyhole.Result(url="https://b.dev/y", status=403,
+                                  wall={"kind": "datadome", "why": "nope"})]
+        with tempfile.TemporaryDirectory() as d:
+            written = keyhole.write_corpus(results, d)
+            files = sorted(os.listdir(d))
+        self.assertEqual(files, ["a.dev-x.md", "b.dev-y.md"])
+        self.assertEqual([n for _, n in written], ["a.dev-x.md", "b.dev-y.md"])
+
+
 class TestMCPFetchMany(unittest.TestCase):
     """The fetch_many tool. Network is stubbed: this locks the report shape and
     the isError rule, not the fetching."""
