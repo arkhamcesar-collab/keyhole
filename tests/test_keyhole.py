@@ -100,6 +100,79 @@ class TestExtraction(unittest.TestCase):
         self.assertIn("Product details", keyhole.html_to_markdown(html))
 
 
+class TestContentScope(unittest.TestCase):
+    """Scoping: drop everything before the page's own content root.
+
+    The failure to guard against is one-directional — a cut that eats the article
+    is much worse than a cut that never happens. So every case here has a
+    fallback assertion: something real must survive, or the whole page must be
+    kept and the scope reported as empty.
+    """
+
+    def test_content_before_main_is_not_kept(self):
+        """REGRESSION: the corpus file for a Wikipedia article led with
+        "Jump to content" and a 60-language switcher before the article."""
+        html = ('<body><div id="langlist"><a href="/de">LANG_AFRIKAANS</a></div>'
+                '<p>Jump to content</p>'
+                '<main><h1>ARTICLE</h1><p>Real body text.</p></main></body>')
+        md = keyhole.html_to_markdown(html)
+        self.assertNotIn("Jump to content", md)
+        self.assertNotIn("LANG_AFRIKAANS", md)
+        self.assertIn("# ARTICLE", md)
+        self.assertIn("Real body text", md)
+
+    def test_scope_is_reported_not_guessed(self):
+        html = '<body><p>a</p><main><p>REAL</p></main></body>'
+        self.assertEqual(keyhole.analyze(html).scope, "main")
+
+    def test_no_root_keeps_the_whole_page_and_says_so(self):
+        html = '<body><div><h1>Whole page</h1><p>Kept anyway.</p></div></body>'
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "")
+        self.assertIn("Whole page", keyhole._markdown_of(p))
+
+    def test_empty_main_falls_back_to_the_whole_page(self):
+        """A cut that would empty the page is abandoned, and the scope goes back
+        to empty — a scoping that never happened must not be reported as one."""
+        html = '<body><p>OUTSIDE_TEXT</p><main></main></body>'
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "")
+        self.assertIn("OUTSIDE_TEXT", keyhole._markdown_of(p))
+
+    def test_role_main_is_a_root(self):
+        html = '<body><p>NAV_TEXT</p><div role="main"><h1>REAL</h1></div></body>'
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "div[role=main]")
+        self.assertNotIn("NAV_TEXT", keyhole._markdown_of(p))
+        self.assertIn("REAL", keyhole._markdown_of(p))
+
+    def test_article_is_a_weaker_root_than_main(self):
+        """A teaser <article> above the real <main> must not win the cut."""
+        html = ('<body><article><p>TEASER</p></article><p>MIDDLE</p>'
+                '<main><h1>REAL</h1></main></body>')
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "main")
+        md = keyhole._markdown_of(p)
+        self.assertNotIn("TEASER", md)
+        self.assertNotIn("MIDDLE", md)
+        self.assertIn("REAL", md)
+
+    def test_links_are_scoped_too(self):
+        """--links on an article page should return the article's links, not the
+        site's nav — but only because the nav is really outside the root."""
+        html = ('<body><div><a href="/nav">NAV</a></div>'
+                '<main><a href="/real">REAL</a></main></body>')
+        links = keyhole.extract_links(html, "https://x.dev")
+        self.assertEqual([l["url"] for l in links], ["https://x.dev/real"])
+
+    def test_root_like_text_inside_a_script_is_not_a_root(self):
+        html = ('<body><script>var tpl = "<main><p>NOT_REAL</p></main>"</script>'
+                '<p>KEPT</p></body>')
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "")
+        self.assertIn("KEPT", keyhole._markdown_of(p))
+
+
 class TestWallClassification(unittest.TestCase):
 
     def test_cloudflare_1010_is_named_not_returned(self):
@@ -266,10 +339,16 @@ class TestCorpus(unittest.TestCase):
     def test_body_carries_source_and_content(self):
         r = keyhole.Result(url="https://x.dev", status=200, title="Hi", markdown="# Hi\n\nbody")
         body = keyhole.corpus_body(r)
-        self.assertIn("<!-- source: https://x.dev -->", body)
+        self.assertIn("<!-- source: https://x.dev | scope: none (whole page) -->", body)
         self.assertIn("body", body)
         # The extraction already led with the title: no doubled H1.
         self.assertEqual(body.count("# Hi"), 1)
+
+    def test_body_names_the_scope_it_used(self):
+        """A corpus file must say whether it is the article or the whole page —
+        otherwise a scoping that did nothing looks exactly like one that worked."""
+        r = keyhole.Result(url="https://x.dev", status=200, markdown="body", scope="main")
+        self.assertIn("scope: main", keyhole.corpus_body(r))
 
     def test_body_adds_title_when_extraction_had_none(self):
         r = keyhole.Result(url="https://x.dev", status=200, title="Hi", markdown="body text")

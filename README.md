@@ -51,9 +51,26 @@ while reporting `200`. Two real bugs are frozen as tests in
 - A sidebar `div` opened and never closed swallowed everything after it.
 
 **Extraction never returns nothing when the page had text.** Chrome suppression
-is heuristic, so it is best-effort: if the strict pass yields nothing at all,
-the parse is repeated with suppression disabled. Keeping a cookie banner is a
-much smaller failure than returning an empty page.
+and content scoping are both heuristic, so both are best-effort. If the strict
+pass yields nothing at all, the parse is repeated with suppression disabled, and
+then with no heuristics at all. Keeping a cookie banner, or a language switcher,
+is a much smaller failure than returning an empty page.
+
+**Content is scoped to the page's own root, and the scope is named.** A page's
+`<main>` (or `role="main"`, or `<article>`) is where its content starts; anything
+before it is site chrome, so it is dropped from the markdown, the text *and* the
+links. A `<main>` that turns out to hold nothing is not trusted — the cut is
+abandoned and the whole page is kept instead. Every result carries the root it
+used (`scope=main`, `scope=none`), in the batch row, in `--json` and in the
+corpus file's header — because a scoping that silently did nothing looks exactly
+like one that worked, and only one of those is worth trusting.
+
+Verified live: on MDN the file now starts at the `<h1>` instead of
+`- Skip to main content / - Skip to search / - Web / - HTML / …`; on npm the
+2FA announcement banner is gone. Wikipedia improves by only 74 characters,
+because Vector 2022 puts the language dropdown and the table of contents *inside*
+`<main id="content">` — the semantic root there wraps the UI, not the article.
+That is a real limit of this rule, not a bug in it.
 
 **Escalation is explicit and honest.** `--render` drives headless Chrome
 (`--dump-dom`) for JS-rendered pages and JS challenges. A missing Chrome binary
@@ -80,13 +97,16 @@ forty times — so `batch` exists and reports *counts*, not bodies.
 ```
 
 ```
-[1/4] OK   text=156     links=0    https://example.com
+[1/4] OK   text=156     links=0    scope=none         https://example.com
             — Example Domain
-[3/4] OK   text=71.2k   links=60   https://en.wikipedia.org/wiki/Cloudflare
+[3/4] OK   text=71.2k   links=60   scope=main         https://en.wikipedia.org/wiki/Cloudflare
             — Cloudflare - Wikipedia
 [4/4] ERR  https://this-host-does-not-exist.invalid
             — URLError: <urlopen error [Errno 11001] getaddrinfo failed>
 ```
+
+`scope=` is where the content was taken from: `main`, `article`, `div[role=main]`,
+or `none` when the page has no such root and the whole document was kept.
 
 Input is one URL per line, blank lines and `#`-comment lines skipped, duplicates
 collapsed (first occurrence wins). `#` is deliberately **not** an inline comment
@@ -104,8 +124,9 @@ generic one.
 Surveying tells you *which* pages are worth keeping; `--out` keeps them. One
 markdown file per URL, named from the URL (host + path, `www.` and `.html`
 dropped, query kept because `?id=42` is a different page, fragment dropped), with
-a `<!-- source: ... -->` line so a file read months later still knows where it
-came from. Collisions are numbered in input order, so re-running the same list
+a `<!-- source: ... | scope: main -->` header so a file read months later still
+knows where it came from and whether it holds the article or the whole page.
+Collisions are numbered in input order, so re-running the same list
 overwrites its own files instead of spraying duplicates.
 
 ```
@@ -131,6 +152,7 @@ r.ok          # True
 r.title       # "Example Domain"
 r.markdown    # clean markdown
 r.links       # [{"text": ..., "url": ...}, ...]
+r.scope       # "main" | "article" | "div[role=main]" | "" (whole page kept)
 r.wall        # None, or {"kind": ..., "why": ...}
 
 keyhole.render("https://spa.example")   # headless Chrome, returns a Result too
@@ -146,7 +168,7 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 45 tests
+python tests/test_keyhole.py                  # offline, 54 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 ```
@@ -185,11 +207,16 @@ agent runs with — use an absolute path.)
 
 ## Status
 
-`0.3.0`. Four live sites verified (table above); 45 offline tests green; MCP
-server exercised over the wire with all four tools; `batch` verified live over 4
-URLs, including `--out` writing a corpus of 4 files (3 with content, 1 naming its
-error) and a fragment-only duplicate landing as `-2.md`. Next: `main`-scoped
-content selection, so language switchers and sidebars stop reaching the top of the
-output — visible in the Wikipedia corpus file, where "Jump to content" and the
-language list still lead. Then `--out` over MCP, so an agent can build a corpus,
-not just survey one.
+`0.4.0`. Content is scoped to the page's own root and every result names the root
+it used; 54 offline tests green (was 45); verified live over five sites — MDN,
+npm, Wikipedia, `example.com`, Hacker News — where the markdown for MDN now opens
+at its `<h1>` and for npm the announcement banner is gone, while the two pages
+with no `<main>`/`<article>` report `scope=none` and keep everything. Wikipedia
+was the page that motivated this and it improves by 74 characters: its Vector 2022
+skin wraps the language dropdown and the table of contents inside
+`<main id="content">`, so a structural root cannot reach them. The honest next
+step there is density-based content scoring rather than another nesting rule —
+measured, not guessed: npm's `<main>` does contain one nested `<article>`, which a
+"deepest root wins" rule would use, but MDN has no `<article>` at all, so that
+rule would buy one site and not the one that prompted the work. Then `--out` over
+MCP, so an agent can build a corpus, not just survey one.

@@ -9,7 +9,9 @@ cookie-banner soup. Keyhole does neither. It:
      common wall: Cloudflare's "error code: 1010" on a default User-Agent),
   2. CLASSIFIES a wall when it hits one, naming it instead of returning HTML,
   3. converts real content to clean markdown, dropping chrome/nav/footer/script,
-  4. can escalate to a real browser for JS-rendered or JS-challenge pages.
+  4. scopes that content to the page's own root (<main>, role="main", <article>)
+     and says which root it used, or that it found none,
+  5. can escalate to a real browser for JS-rendered or JS-challenge pages.
 
 Stdlib only — no install step, runs anywhere Python does.
 
@@ -37,7 +39,7 @@ import zlib
 from dataclasses import dataclass, field, asdict
 from html.parser import HTMLParser
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 BROWSER_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -126,6 +128,7 @@ class Result:
     text: str = ""
     markdown: str = ""
     links: list = field(default_factory=list)
+    scope: str = ""      # content root the extraction was scoped to; "" = whole page
     bytes_in: int = 0
     wall: dict | None = None
     error: str = ""
@@ -177,9 +180,11 @@ def fetch(url: str, timeout: float = 25.0, headers: dict | None = None,
         meta = extract_metadata(body)
         res.title = meta["title"]
         res.description = meta["description"]
-        res.markdown = html_to_markdown(body)
-        res.text = html_to_text(body)
-        res.links = extract_links(body, res.final_url or url)
+        page = analyze(body)
+        res.markdown = _markdown_of(page)
+        res.text = _text_of(page)
+        res.links = _links_from(page, res.final_url or url)
+        res.scope = page.scope
     else:
         res.text = body
         res.markdown = body
@@ -200,23 +205,39 @@ _CHROME_PATTERNS = re.compile(
     r"breadcrumb|skip[-_]?link|social[-_]?(share|icons)|newsletter|"
     r"advert(isement)?|sponsored|promo[-_]?banner|sidebar)\b", re.I)
 _CHROME_TAGS = {"nav", "footer", "aside"}
+# Where real content starts. <main> is unique per spec; <article> is not, but a
+# page whose first article comes after a language switcher wants the same cut.
+_ROOT_TAGS = {"main", "article"}
 
 
 class _Reader(HTMLParser):
-    """Single pass: markdown, plain text, title/description, links.
+    """Single pass: markdown, plain text, title/description, links, content scope.
 
     Uses an explicit tag stack rather than depth counters. Counters desynchronise
     the moment a document has an unbalanced or void tag — and then silently drop
     the remainder of the page. Tolerance here has to be structural, not hoped for.
+
+    Everything is accumulated in document order, and *afterwards* the region
+    before the content root is discarded (see _apply_scope). Slicing at the end
+    instead of buffering as we go is what keeps the failure mode honest: when the
+    chosen root turns out to hold nothing, the untouched document is still there
+    to fall back on. ``self.scope`` names the root actually used, so a caller can
+    tell "scoped to <main>" from "no root found, kept the whole page" — a
+    scoping that silently did nothing would be indistinguishable from one that
+    silently dropped the article.
     """
 
-    def __init__(self):
+    def __init__(self, scope: bool = True):
         super().__init__(convert_charrefs=True)
         self.md: list[str] = []
         self.txt: list[str] = []
         self.links: list[tuple[str, str]] = []
         self.title = ""
         self.description = ""
+        self.scope = ""                     # content root used, "" = whole document
+        self._want_scope = scope
+        self._root_at: tuple[int, int, int] | None = None   # (md, txt, links) cut
+        self._root_tag = ""
         self._stack: list[tuple[str, bool]] = []   # (tag, suppressed)
         self._in_title = False
         self._cur_link: str | None = None
@@ -254,6 +275,59 @@ class _Reader(HTMLParser):
             return False
         return bool(_CHROME_PATTERNS.search(f"{a.get('id', '')} {a.get('class', '')}"))
 
+    # -- content scope
+    @staticmethod
+    def _content_root(tag: str, a: dict) -> str:
+        """Name the content root this tag opens, or "" if it opens none."""
+        if tag in _ROOT_TAGS:
+            return tag
+        if a.get("role") == "main":
+            return f"{tag}[role=main]"
+        return ""
+
+    _ROOT_STRENGTH = {"article": 1, "main": 2}
+
+    def _adopt_root(self, tag: str, a: dict) -> None:
+        """Remember where the content starts; a stronger root overrides a weaker.
+
+        <main> beats <article>, so a teaser article above the real <main> doesn't
+        win the cut just by coming first.
+        """
+        if not self._want_scope:
+            return
+        name = self._content_root(tag, a)
+        if not name:
+            return
+        rank = self._ROOT_STRENGTH.get(name.split("[")[0], 2)
+        if self._root_at is not None:
+            if rank <= self._ROOT_STRENGTH.get(self._root_tag.split("[")[0], 2):
+                return
+        self._root_at = (len(self.md), len(self.txt), len(self.links))
+        self._root_tag = name
+        self.scope = name
+
+    def _apply_scope(self) -> None:
+        """Drop everything before the content root — but never at the cost of it all.
+
+        If the chosen root holds no markdown, no text and no links, the cut is
+        abandoned and the whole document is kept, and ``scope`` goes back to ""
+        so nobody reads a scoping that never happened.
+        """
+        if self._root_at is None:
+            return
+        cut_md, cut_txt, cut_links = self._root_at
+        if "".join(self.md[cut_md:]).strip() or self.txt[cut_txt:] or self.links[cut_links:]:
+            del self.md[:cut_md]
+            del self.txt[:cut_txt]
+            del self.links[:cut_links]
+        else:
+            self.scope = ""
+            self._root_at = None
+
+    def close(self):
+        super().close()
+        self._apply_scope()
+
     def _push(self, tag, suppress, prefix=None):
         self._stack.append((tag, suppress))
         if not suppress and prefix:
@@ -263,6 +337,7 @@ class _Reader(HTMLParser):
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
         a = self._attrs(attrs)
+        self._adopt_root(tag, a)
 
         if tag == "title":
             self._in_title = True
@@ -388,8 +463,8 @@ class _Reader(HTMLParser):
         self.txt.append(data)
 
 
-def _reader(html_text: str, cls=None) -> _Reader:
-    p = (cls or _Reader)()
+def _reader(html_text: str, cls=None, scope: bool = True) -> _Reader:
+    p = (cls or _Reader)(scope=scope)
     try:
         p.feed(html_text)
         p.close()
@@ -407,29 +482,51 @@ class _NoChromeReader(_Reader):
 
 
 def _parse(html_text: str) -> _Reader:
-    """Parse strictly; if that yields nothing, parse again without chrome detection.
+    """Parse strictly; on an empty result relax the heuristics, twice if needed.
 
-    Suppression is heuristic and best-effort. Malformed HTML (a sidebar opened
-    once and never closed) or an over-eager class pattern can nest an entire
-    document inside a suppressed subtree. Returning an empty result for a page
-    that plainly has text is a worse failure than keeping a cookie banner.
+    Both suppression and content scoping are best-effort. Malformed HTML (a
+    sidebar opened once and never closed) or an over-eager class pattern can nest
+    an entire document inside a suppressed subtree; a self-contained <main> can
+    hold the wrapper and not the words. Returning an empty result for a page that
+    plainly has text is a worse failure than keeping a cookie banner or a
+    language switcher, so the ladder ends with no heuristics at all.
     """
     p = _reader(html_text)
     if p.md or p.txt or p.links:
         return p
-    return _reader(html_text, _NoChromeReader)
+    p = _reader(html_text, _NoChromeReader)
+    if p.md or p.txt or p.links:
+        return p
+    return _reader(html_text, _NoChromeReader, scope=False)
 
 
-def html_to_markdown(html_text: str) -> str:
-    md = "".join(_parse(html_text).md)
+def analyze(html_text: str) -> _Reader:
+    """One parse of a document: markdown, text, links, and the scope used.
+
+    `fetch` goes through here so a page is parsed once instead of three times, and
+    so `Result.scope` can say which content root the output came from.
+    """
+    return _parse(html_text)
+
+
+def _markdown_of(r: _Reader) -> str:
+    md = "".join(r.md)
     md = re.sub(r"[ \t]+", " ", md)
     md = re.sub(r" *\n *", "\n", md)
     md = re.sub(r"\n{3,}", "\n\n", md)
     return md.strip()
 
 
+def _text_of(r: _Reader) -> str:
+    return re.sub(r"\s+", " ", " ".join(r.txt)).strip()
+
+
+def html_to_markdown(html_text: str) -> str:
+    return _markdown_of(_parse(html_text))
+
+
 def html_to_text(html_text: str) -> str:
-    return re.sub(r"\s+", " ", " ".join(_parse(html_text).txt)).strip()
+    return _text_of(_parse(html_text))
 
 
 def extract_metadata(html_text: str) -> dict:
@@ -447,9 +544,9 @@ def extract_metadata(html_text: str) -> dict:
     return {"title": re.sub(r"\s+", " ", title), "description": desc[:500]}
 
 
-def extract_links(html_text: str, base: str = "") -> list:
+def _links_from(r: _Reader, base: str = "") -> list:
     out, seen = [], set()
-    for label, href in _parse(html_text).links:
+    for label, href in r.links:
         if not href:
             continue
         absolute = urllib.parse.urljoin(base, href) if base else href
@@ -462,6 +559,10 @@ def extract_links(html_text: str, base: str = "") -> list:
         if len(out) >= 60:
             break
     return out
+
+
+def extract_links(html_text: str, base: str = "") -> list:
+    return _links_from(_parse(html_text), base)
 
 
 # ------------------------------------------------------------ browser fallback
@@ -507,9 +608,11 @@ def render(url: str, timeout: int = 40) -> Result:
     res.bytes_in = len(dom)
     meta = extract_metadata(dom)
     res.title, res.description = meta["title"], meta["description"]
-    res.markdown = html_to_markdown(dom)
-    res.text = html_to_text(dom)
-    res.links = extract_links(dom, url)
+    page = analyze(dom)
+    res.markdown = _markdown_of(page)
+    res.text = _text_of(page)
+    res.links = _links_from(page, url)
+    res.scope = page.scope
     if classify_wall(200, dom, {}):
         res.wall = {"kind": "post_render", "why": "the page is still gated after rendering"}
     return res
@@ -579,8 +682,11 @@ def format_batch_row(index: int, total: int, res: Result) -> str:
     if not res.ok:
         return f"{head} HTTP {res.status:<4} {'':<22}{res.url}"
     title = (res.title or "").strip()
+    # scope=none means the page has no <main>/<article> and the whole document was
+    # kept: the honest counterpart to a scope that silently did nothing.
     line = (f"{head} OK   text={_short(len(res.text or '')):<7} "
-            f"links={len(res.links):<4} {res.url}{rendered}")
+            f"links={len(res.links):<4} scope={res.scope or 'none':<12} "
+            f"{res.url}{rendered}")
     return line + (f"\n            — {title[:80]}" if title else "")
 
 
@@ -590,7 +696,7 @@ def batch_payload(res: Result) -> dict:
     return {"url": res.url, "ok": res.ok, "status": res.status, "method": res.method,
             "final_url": res.final_url, "title": res.title, "bytes_in": res.bytes_in,
             "text_chars": len(res.text or ""), "links": len(res.links),
-            "wall": res.wall, "error": res.error}
+            "scope": res.scope, "wall": res.wall, "error": res.error}
 
 
 # ---------------------------------------------------------------- corpus output
@@ -664,7 +770,9 @@ def corpus_body(res: Result) -> str:
     silent-drop failure this tool exists to prevent. The file says ``FAILED`` and
     names the wall, so ``ls`` shows the hole instead of hiding it.
     """
-    header = f"<!-- source: {res.url}" + (" | rendered" if res.method == "browser" else "") + " -->"
+    header = (f"<!-- source: {res.url}"
+              + (" | rendered" if res.method == "browser" else "")
+              + f" | scope: {res.scope or 'none (whole page)'} -->")
     if res.wall or res.error or not res.ok:
         reason = (f"WALL {res.wall['kind']}: {res.wall['why']}" if res.wall
                   else f"ERROR: {res.error}" if res.error
@@ -740,7 +848,8 @@ def _emit(res: Result, args) -> None:
             print(f"title: {res.title}")
         if res.description:
             print(f"desc:  {res.description[:200]}")
-        print(f"bytes: {res.bytes_in}  links: {len(res.links)}  text: {len(res.text)}  method: {res.method}")
+        print(f"bytes: {res.bytes_in}  links: {len(res.links)}  text: {len(res.text)}"
+              f"  scope: {res.scope or 'none'}  method: {res.method}")
         if res.text[:200]:
             print(f"first: {res.text[:200]}")
 
