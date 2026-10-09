@@ -113,6 +113,16 @@ class TestWallClassification(unittest.TestCase):
     def test_real_page_is_not_a_wall(self):
         self.assertIsNone(keyhole.classify_wall(200, "<html><body>hello</body></html>", {}))
 
+    def test_big_200_page_is_not_a_wall_despite_challenge_strings(self):
+        """REGRESSION: Wikipedia was flagged as a CAPTCHA wall while returning 21k
+        chars of real article, because its HTML embeds a reCAPTCHA form."""
+        body = "<html><body>" + ("real content " * 2000) + "<div class='g-recaptcha'></div></body></html>"
+        self.assertIsNone(keyhole.classify_wall(200, body, {}))
+
+    def test_small_200_challenge_page_is_still_a_wall(self):
+        self.assertEqual(keyhole.classify_wall(200, "<title>Just a moment...</title>", {})[0],
+                         "cloudflare_challenge")
+
     def test_tiny_403_is_treated_as_a_block(self):
         wall = keyhole.classify_wall(403, "Forbidden", {"Server": "nginx"})
         self.assertIsNotNone(wall)

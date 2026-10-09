@@ -96,6 +96,11 @@ def _decompress(raw: bytes, encoding: str) -> bytes:
 
 def classify_wall(status: int, body: str, headers: dict) -> tuple[str, str] | None:
     """Return (kind, explanation) if this response is a bot wall, else None."""
+    # A 200 with a substantial body IS the page. Walls replace content; they do
+    # not accompany it. Without this guard, Wikipedia gets flagged as a CAPTCHA
+    # because its HTML contains a reCAPTCHA form.
+    if status == 200 and len(body) > 20000:
+        return None
     probe = body[:20000].lower()
     for kind, why, pattern in WALL_SIGNATURES:
         if re.search(pattern, probe, re.I):
