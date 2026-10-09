@@ -2,9 +2,10 @@
 """Keyhole as an MCP server — stdio JSON-RPC 2.0, no SDK, no dependencies.
 
 Any MCP-speaking agent (Hermes, Claude Code, Cursor, ...) can install this and
-get three tools:
+get four tools:
 
     fetch_page     URL -> clean markdown, wall named if blocked
+    fetch_many     URLs -> compact report, one line each, input order
     extract_links  URL -> absolutised, deduped links
     diagnose_url   URL -> is it up? is it walled? which wall?
 
@@ -72,6 +73,26 @@ TOOLS = [
         },
     },
     {
+        "name": "fetch_many",
+        "description": (
+            "Fetch many URLs in one call and return a compact report: one line per "
+            "URL with status, text length, link count, and the wall kind if blocked. "
+            "Use this to survey a list of candidate sources without pulling every "
+            "page's full text into context — follow up on the interesting ones with "
+            "fetch_page. Results come back in the order the URLs were given."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "urls": {"type": "array", "items": {"type": "string"},
+                         "description": "URLs to fetch. A single newline-separated string is also accepted."},
+                "render": {"type": "boolean", "default": False, "description": "Escalate walls and JS shells to headless Chrome. Slow: it costs a browser launch per URL."},
+                "jobs": {"type": "integer", "default": 4, "description": "Parallel fetches, capped at 16."},
+            },
+            "required": ["urls"],
+        },
+    },
+    {
         "name": "diagnose_url",
         "description": (
             "Check whether a URL is reachable, and whether it sits behind a bot "
@@ -106,16 +127,8 @@ def tool_fetch_page(args: dict) -> dict:
     fmt = args.get("format") or "markdown"
     max_chars = int(args.get("max_chars") or MAX_CHARS_DEFAULT)
 
-    res = keyhole.fetch(url)
-    used_browser = False
-    shell = (res.status == 200 and not res.error and res.bytes_in > 0
-             and len(res.text or "") < 200)
-    if render and (res.wall or not res.ok or shell):
-        ren = keyhole.render(res.final_url or res.url)
-        if ren.status == 200 and not ren.error:
-            res, used_browser = ren, True
-        elif ren.error:
-            res.error = f"{res.error + '; ' if res.error else ''}{ren.error}"
+    res = keyhole.fetch_maybe_render(url, do_render=render)
+    used_browser = res.method == "browser"
 
     if res.wall and not res.ok:
         return _text(
@@ -187,8 +200,38 @@ def tool_diagnose_url(args: dict) -> dict:
     return _text("\n".join(out))
 
 
+def tool_fetch_many(args: dict) -> dict:
+    urls = args.get("urls") or []
+    if isinstance(urls, str):
+        # Agents sometimes paste a newline-separated list into a string field;
+        # accepting it costs nothing and avoids a pointless round trip.
+        urls = keyhole.parse_url_list(urls)
+    urls = [u.strip() for u in urls if isinstance(u, str) and u.strip()]
+    if not urls:
+        return _text("fetch_many requires a non-empty 'urls' array.", True)
+
+    do_render = bool(args.get("render"))
+    results = keyhole.run_batch(urls, do_render=do_render, jobs=int(args.get("jobs") or 4))
+
+    lines = []
+    for i, r in enumerate(results, 1):
+        lines += keyhole.format_batch_row(i, len(results), r).splitlines()
+    ok = sum(1 for r in results if r.ok)
+    walled = sum(1 for r in results if r.wall)
+    lines.append("")
+    lines.append(f"{ok}/{len(results)} ok" + (f", {walled} walled" if walled else ""))
+    if walled and not do_render:
+        lines.append("hint: render=true to escalate the walled ones.")
+    if ok:
+        lines.append("Use fetch_page on the ones worth reading.")
+    # isError only when nothing came back at all: a partial survey is still a
+    # useful answer, and flagging it as an error would invite a pointless retry.
+    return _text("\n".join(lines), is_error=(ok == 0))
+
+
 HANDLERS = {
     "fetch_page": tool_fetch_page,
+    "fetch_many": tool_fetch_many,
     "extract_links": tool_extract_links,
     "diagnose_url": tool_diagnose_url,
 }

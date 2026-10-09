@@ -120,8 +120,9 @@ for r in keyhole.run_batch(["https://a.dev", "https://b.dev"], jobs=4):
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 28 tests
+python tests/test_keyhole.py                  # offline, 34 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
+python tests/probe_mcp.py                     # drives the MCP server over stdio
 ```
 
 ## Use it from an agent (MCP)
@@ -130,11 +131,12 @@ KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 no `mcp` SDK, no install. An agent tool that needs a `pip install` before it can
 tell you a site is down has already failed at its one job.
 
-It exposes three tools:
+It exposes four tools:
 
 | Tool | Purpose |
 |---|---|
 | `fetch_page` | URL → clean markdown; names the wall if blocked. `render=true` for JS pages. |
+| `fetch_many` | URLs → compact report, one line each, in input order. Survey, then follow up. |
 | `extract_links` | URL → absolutised, deduped links. |
 | `diagnose_url` | Is it up? Is it walled? Which wall? No page content returned. |
 
@@ -157,8 +159,8 @@ agent runs with — use an absolute path.)
 
 ## Status
 
-`0.2.0`. Four live sites verified (table above); 28 offline tests green; MCP
-server exercised over the wire; `batch` verified live over 4 URLs. Next:
-`main`-scoped content selection, so language switchers and sidebars stop reaching
-the top of the output, and a `--out DIR` for batch that writes one markdown file
-per URL instead of only counting them.
+`0.2.0`. Four live sites verified (table above); 34 offline tests green; MCP
+server exercised over the wire with all four tools; `batch` verified live over 4
+URLs. Next: `main`-scoped content selection, so language switchers and sidebars
+stop reaching the top of the output, and a `--out DIR` for batch that writes one
+markdown file per URL instead of only counting them.

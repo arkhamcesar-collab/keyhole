@@ -12,6 +12,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import keyhole  # noqa: E402
+import keyhole_mcp  # noqa: E402
 
 
 class TestParserSurvival(unittest.TestCase):
@@ -227,6 +228,66 @@ class TestBatch(unittest.TestCase):
             keyhole.fetch, keyhole.render = real_fetch, real_render
         self.assertEqual(calls, ["https://spa.dev"])
         self.assertEqual(res.method, "browser")
+
+
+class TestMCPFetchMany(unittest.TestCase):
+    """The fetch_many tool. Network is stubbed: this locks the report shape and
+    the isError rule, not the fetching."""
+
+    def _call(self, args, results):
+        real = keyhole.run_batch
+        keyhole.run_batch = lambda urls, **kw: results
+        try:
+            return keyhole_mcp.tool_fetch_many(args)
+        finally:
+            keyhole.run_batch = real
+
+    def test_empty_urls_is_an_error(self):
+        out = keyhole_mcp.tool_fetch_many({"urls": []})
+        self.assertTrue(out["isError"])
+        self.assertIn("non-empty", out["content"][0]["text"])
+
+    def test_rejects_non_string_junk(self):
+        out = keyhole_mcp.tool_fetch_many({"urls": [1, None, "  "]})
+        self.assertTrue(out["isError"])
+
+    def test_accepts_a_newline_separated_string(self):
+        seen = {}
+
+        def fake(urls, **kw):
+            seen["urls"] = urls
+            return [keyhole.Result(url=u, status=200, text="body") for u in urls]
+
+        real = keyhole.run_batch
+        keyhole.run_batch = fake
+        try:
+            keyhole_mcp.tool_fetch_many({"urls": "# notes\nhttps://a.dev\nhttps://b.dev\n"})
+        finally:
+            keyhole.run_batch = real
+        self.assertEqual(seen["urls"], ["https://a.dev", "https://b.dev"])
+
+    def test_partial_success_is_not_an_error(self):
+        """One dead URL out of two still answers the question asked, so it must
+        not be flagged isError — that would invite a pointless retry."""
+        results = [keyhole.Result(url="https://a.dev", status=200, text="body"),
+                   keyhole.Result(url="https://b.dev", error="URLError: nope")]
+        out = self._call({"urls": ["https://a.dev", "https://b.dev"]}, results)
+        self.assertFalse(out["isError"])
+        self.assertIn("1/2 ok", out["content"][0]["text"])
+
+    def test_total_failure_is_an_error(self):
+        results = [keyhole.Result(url="https://a.dev", error="URLError: nope")]
+        out = self._call({"urls": ["https://a.dev"]}, results)
+        self.assertTrue(out["isError"])
+        self.assertIn("0/1 ok", out["content"][0]["text"])
+
+    def test_hint_only_appears_when_a_wall_is_unrendered(self):
+        walled = [keyhole.Result(url="https://a.dev", status=403,
+                                 wall={"kind": "cloudflare_1010", "why": "x"})]
+        out = self._call({"urls": ["https://a.dev"]}, walled)
+        self.assertIn("hint: render=true", out["content"][0]["text"])
+        out = self._call({"urls": ["https://a.dev"], "render": True}, walled)
+        self.assertNotIn("hint: render=true", out["content"][0]["text"])
 
 
 @unittest.skipUnless(os.environ.get("KEYHOLE_NET_TESTS"), "set KEYHOLE_NET_TESTS=1 for live checks")
