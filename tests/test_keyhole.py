@@ -133,6 +133,102 @@ class TestWallClassification(unittest.TestCase):
         self.assertIn("Mozilla/5.0", keyhole.BROWSER_HEADERS["User-Agent"])
 
 
+class TestBatch(unittest.TestCase):
+    """Batch mode: the input parser and the report row. Offline, pure functions."""
+
+    def test_parse_drops_blanks_and_comments(self):
+        urls = keyhole.parse_url_list("\n# a comment\nhttps://a.dev\n\n   \nhttps://b.dev\n")
+        self.assertEqual(urls, ["https://a.dev", "https://b.dev"])
+
+    def test_parse_dedupes_keeping_first_occurrence_and_order(self):
+        urls = keyhole.parse_url_list("https://c.dev\nhttps://a.dev\nhttps://c.dev\n")
+        self.assertEqual(urls, ["https://c.dev", "https://a.dev"])
+
+    def test_parse_does_not_treat_hash_as_inline_comment(self):
+        """A URL fragment is not a comment. Truncating it would fetch the wrong
+        page and report success, which is worse than an error."""
+        urls = keyhole.parse_url_list("https://a.dev/post#section-2\n")
+        self.assertEqual(urls, ["https://a.dev/post#section-2"])
+
+    def test_run_batch_returns_input_order_even_if_completion_differs(self):
+        import time
+        order = []
+
+        def fake(url, timeout=25.0, do_render=False):
+            # The first URL is deliberately the slowest: if run_batch collected by
+            # completion time instead of input position, it would come back last.
+            time.sleep(0.05 if url == "https://slow.dev" else 0.0)
+            order.append(url)
+            r = keyhole.Result(url=url, status=200, text="body text")
+            return r
+
+        real = keyhole.fetch_maybe_render
+        keyhole.fetch_maybe_render = fake
+        try:
+            res = keyhole.run_batch(["https://slow.dev", "https://fast.dev"], jobs=2)
+        finally:
+            keyhole.fetch_maybe_render = real
+        self.assertEqual([r.url for r in res], ["https://slow.dev", "https://fast.dev"])
+        self.assertEqual(sorted(order), ["https://fast.dev", "https://slow.dev"])
+
+    def test_row_names_a_wall_instead_of_reporting_generic_failure(self):
+        r = keyhole.Result(url="https://x.dev", status=403,
+                           wall={"kind": "cloudflare_1010", "why": "nope"})
+        row = keyhole.format_batch_row(1, 2, r)
+        self.assertIn("WALL cloudflare_1010", row)
+
+    def test_row_shows_error_text(self):
+        r = keyhole.Result(url="https://x.dev", error="ConnectTimeout: timed out after 25s")
+        row = keyhole.format_batch_row(1, 1, r)
+        self.assertIn("ERR", row)
+        self.assertIn("https://x.dev", row)
+        # The URL leads and the reason is not cut to 22 chars mid-word.
+        self.assertIn("ConnectTimeout: timed out after 25s", row)
+
+    def test_row_marks_a_rendered_result(self):
+        r = keyhole.Result(url="https://spa.dev", status=200, method="browser",
+                           text="rendered body", title="SPA")
+        self.assertIn("[rendered]", keyhole.format_batch_row(1, 1, r))
+
+    def test_payload_carries_counts_not_bodies(self):
+        r = keyhole.Result(url="https://x.dev", status=200, text="12345", markdown="# big")
+        p = keyhole.batch_payload(r)
+        self.assertEqual(p["text_chars"], 5)
+        self.assertNotIn("text", p)
+        self.assertNotIn("markdown", p)
+        self.assertTrue(p["ok"])
+
+    def test_render_is_not_attempted_on_a_clean_result(self):
+        """--render escalates unusable results; it must not spend a browser on a
+        page that already came back fine."""
+        calls = []
+        real_fetch, real_render = keyhole.fetch, keyhole.render
+        keyhole.fetch = lambda url, timeout=25.0: keyhole.Result(
+            url=url, status=200, text="plenty of real text " * 20)
+        keyhole.render = lambda url, timeout=40: calls.append(url) or keyhole.Result(url=url)
+        try:
+            keyhole.fetch_maybe_render("https://fine.dev", do_render=True)
+        finally:
+            keyhole.fetch, keyhole.render = real_fetch, real_render
+        self.assertEqual(calls, [])
+
+    def test_render_escalates_a_client_rendered_shell(self):
+        """A shell is HTTP 200 with almost no text: res.ok is True, so ok alone
+        cannot be the gate or the SPA is never rendered."""
+        calls = []
+        real_fetch, real_render = keyhole.fetch, keyhole.render
+        keyhole.fetch = lambda url, timeout=25.0: keyhole.Result(
+            url=url, status=200, bytes_in=9000, text="")
+        keyhole.render = lambda url, timeout=40: calls.append(url) or keyhole.Result(
+            url=url, status=200, method="browser", text="real rendered content")
+        try:
+            res = keyhole.fetch_maybe_render("https://spa.dev", do_render=True)
+        finally:
+            keyhole.fetch, keyhole.render = real_fetch, real_render
+        self.assertEqual(calls, ["https://spa.dev"])
+        self.assertEqual(res.method, "browser")
+
+
 @unittest.skipUnless(os.environ.get("KEYHOLE_NET_TESTS"), "set KEYHOLE_NET_TESTS=1 for live checks")
 class TestLive(unittest.TestCase):
 

@@ -28,6 +28,7 @@ import os
 import re
 import shutil
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 import sys
 import urllib.error
 import urllib.parse
@@ -36,7 +37,7 @@ import zlib
 from dataclasses import dataclass, field, asdict
 from html.parser import HTMLParser
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
 BROWSER_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -514,6 +515,103 @@ def render(url: str, timeout: int = 40) -> Result:
     return res
 
 
+# ------------------------------------------------------------------- batching
+
+def parse_url_list(text: str) -> list:
+    """URLs from a text blob: one per line, blanks and '#'-comment lines dropped,
+    duplicates removed keeping the first occurrence, input order preserved.
+
+    '#' is NOT an inline comment marker here. URLs legitimately carry fragments
+    (``https://x.dev/a#section``), and silently truncating one would fetch the
+    wrong page rather than fail — a lie is worse than an error.
+    """
+    out, seen = [], set()
+    for line in text.splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s not in seen:
+            seen.add(s)
+            out.append(s)
+    return out
+
+
+def fetch_maybe_render(url: str, timeout: float = 25.0, do_render: bool = False) -> Result:
+    """``fetch()``, escalating to a real browser when asked and the HTTP result is
+    unusable: walled, errored, or a client-rendered shell.
+
+    A shell — HTTP 200 carrying almost no text — must escalate even though
+    ``res.ok`` is True, so ``ok`` alone cannot be the gate. If the escalation
+    itself fails, the error is appended rather than swallowed: an empty render is
+    never allowed to look like content.
+    """
+    res = fetch(url, timeout=timeout)
+    shell = (res.status == 200 and not res.error and res.bytes_in > 0
+             and len(res.text or "") < 200)
+    if do_render and (res.wall or not res.ok or shell):
+        ren = render(res.final_url or res.url)
+        if ren.status == 200 and not ren.error:
+            return ren
+        if ren.error:
+            res.error = f"{res.error + '; ' if res.error else ''}{ren.error}"
+    return res
+
+
+def _short(n: int) -> str:
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.1f}M"
+    if n >= 1_000:
+        return f"{n / 1000:.1f}k"
+    return str(n)
+
+
+def format_batch_row(index: int, total: int, res: Result) -> str:
+    """One line per URL. A wall and an error say so in the status column instead
+    of being flattened into a generic failure — the whole point of the tool."""
+    head = f"[{index}/{total}]"
+    rendered = " [rendered]" if res.method == "browser" else ""
+    if res.wall:
+        return f"{head} WALL {res.wall['kind']:<22} {res.url}"
+    if res.error:
+        # URL first, reason on its own indented line: a 22-char grid cell cut the
+        # actual error off mid-word, which is the least useful thing to truncate.
+        return f"{head} ERR  {res.url}{rendered}\n            — {res.error[:140]}"
+    if not res.ok:
+        return f"{head} HTTP {res.status:<4} {'':<22}{res.url}"
+    title = (res.title or "").strip()
+    line = (f"{head} OK   text={_short(len(res.text or '')):<7} "
+            f"links={len(res.links):<4} {res.url}{rendered}")
+    return line + (f"\n            — {title[:80]}" if title else "")
+
+
+def batch_payload(res: Result) -> dict:
+    """The JSON view of a batch row: counts, not bodies. Batch surveys many URLs;
+    shipping every page's text inline would defeat the point."""
+    return {"url": res.url, "ok": res.ok, "status": res.status, "method": res.method,
+            "final_url": res.final_url, "title": res.title, "bytes_in": res.bytes_in,
+            "text_chars": len(res.text or ""), "links": len(res.links),
+            "wall": res.wall, "error": res.error}
+
+
+def run_batch(urls: list, timeout: float = 25.0, do_render: bool = False,
+              jobs: int = 4) -> list:
+    """Fetch every URL, returning results in input order regardless of jobs.
+
+    Order is the contract: a batch report that reordered itself by completion
+    time would be unreadable next to the list you fed in. jobs is capped at 16 —
+    beyond that the win is negligible and hammering a host is rude.
+    """
+    jobs = max(1, min(jobs, len(urls), 16))
+
+    def one(u):
+        return fetch_maybe_render(u, timeout=timeout, do_render=do_render)
+
+    if jobs == 1:
+        return [one(u) for u in urls]
+    with ThreadPoolExecutor(max_workers=jobs) as ex:
+        return list(ex.map(one, urls))
+
+
 # ------------------------------------------------------------------------ CLI
 
 def _emit(res: Result, args) -> None:
@@ -558,23 +656,51 @@ def main(argv=None):
     f.add_argument("--render", action="store_true", help="escalate to a real browser")
     f.add_argument("--timeout", type=float, default=25.0)
     f.add_argument("--chrome", default=None, help="path to a Chrome/Chromium binary")
+    b = sub.add_parser("batch", help="fetch many URLs, one per line, from stdin or --file")
+    b.add_argument("--file", default=None, help="read URLs from this file (default: stdin)")
+    b.add_argument("--render", action="store_true", help="escalate unusable results to a browser")
+    b.add_argument("--timeout", type=float, default=25.0)
+    b.add_argument("--jobs", type=int, default=4, help="parallel fetches (default 4, capped at 16)")
+    b.add_argument("--json", action="store_true", help="emit one JSON array instead of rows")
     args = ap.parse_args(argv)
-    if args.chrome:
-        CHROME_EXE_CANDIDATES.insert(0, args.chrome)
+    chrome = getattr(args, "chrome", None)
+    if chrome:
+        CHROME_EXE_CANDIDATES.insert(0, chrome)
     if args.cmd == "fetch":
-        res = fetch(args.url, timeout=args.timeout)
-        # A client-rendered shell is HTTP 200 carrying almost no text, so
-        # res.ok alone must not veto rendering: --render means render.
-        shell = (res.status == 200 and not res.error and res.bytes_in > 0
-                 and len(res.text or "") < 200)
-        if args.render and (res.wall or not res.ok or shell):
-            ren = render(res.final_url or res.url)
-            if ren.status == 200 and not ren.error:
-                res = ren
-            elif ren.error:
-                res.error = f"{res.error + '; ' if res.error else ''}{ren.error}"
+        res = fetch_maybe_render(args.url, timeout=args.timeout, do_render=args.render)
         _emit(res, args)
         return 0 if res.ok else 1
+    if args.cmd == "batch":
+        if args.file:
+            try:
+                with open(args.file, "r", encoding="utf-8", errors="replace") as fh:
+                    raw = fh.read()
+            except OSError as e:
+                print(f"cannot read {args.file}: {e}", file=sys.stderr)
+                return 2
+        else:
+            raw = sys.stdin.read()
+        urls = parse_url_list(raw)
+        if not urls:
+            print("no URLs given — one per line on stdin, or --file PATH", file=sys.stderr)
+            return 2
+        results = run_batch(urls, timeout=args.timeout, do_render=args.render, jobs=args.jobs)
+        if args.json:
+            print(json.dumps([batch_payload(r) for r in results], indent=2, ensure_ascii=False))
+        else:
+            for i, r in enumerate(results, 1):
+                print(format_batch_row(i, len(results), r))
+            note = f"{sum(1 for r in results if r.ok)}/{len(results)} ok"
+            walled = sum(1 for r in results if r.wall)
+            if walled:
+                note += f", {walled} walled"
+            # Buffer order: without this the stderr summary can print before the
+            # stdout rows it summarises, which reads as a contradiction.
+            sys.stdout.flush()
+            print(f"\n{note}", file=sys.stderr)
+            if walled and not args.render:
+                print("hint: --render to escalate the walled ones to a real browser", file=sys.stderr)
+        return 0 if all(r.ok for r in results) else 1
     return 2
 
 
