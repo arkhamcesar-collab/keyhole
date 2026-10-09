@@ -171,6 +171,7 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 python tests/test_keyhole.py                  # offline, 54 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
+python tests/probe_density.py                 # measures candidate extraction rules, live
 ```
 
 ## Use it from an agent (MCP)
@@ -214,9 +215,19 @@ at its `<h1>` and for npm the announcement banner is gone, while the two pages
 with no `<main>`/`<article>` report `scope=none` and keep everything. Wikipedia
 was the page that motivated this and it improves by 74 characters: its Vector 2022
 skin wraps the language dropdown and the table of contents inside
-`<main id="content">`, so a structural root cannot reach them. The honest next
-step there is density-based content scoring rather than another nesting rule —
-measured, not guessed: npm's `<main>` does contain one nested `<article>`, which a
-"deepest root wins" rule would use, but MDN has no `<article>` at all, so that
-rule would buy one site and not the one that prompted the work. Then `--out` over
+`<main id="content">`, so a structural root cannot reach them. The next step there
+was assumed to be density-based scoring; `tests/probe_density.py` measured it and
+split the verdict. Non-link text as the signal is **dead**: on Wikipedia it picks
+an ancestor of `<main>` (a −7 character change), and on MDN and npm it picks
+exactly today's container. Paragraph text is the signal that survives — but only
+as a *tightening* of the structural cut, never above it: after cutting at
+`<main>`/`<article>`, cut again at the innermost container that still holds ~all
+of the page's `<p>` text. Measured through keyhole's own extractor, that is
+Wikipedia −1,692 characters with the file no longer opening on sixty language
+names, npm −111 with the `Readme · Code · Beta` tab chrome gone, and MDN,
+`example.com` and Hacker News unchanged — nothing loses the article marker and
+nothing grows. So the honest next step is narrower than "a real reader": one more
+nesting rule, measured, not a project. (`deepest root wins` was likewise measured
+and dropped: npm's `<main>` has a nested `<article>`, MDN has none at all, so it
+would buy one site and not the one that prompted the work.) Then `--out` over
 MCP, so an agent can build a corpus, not just survey one.
