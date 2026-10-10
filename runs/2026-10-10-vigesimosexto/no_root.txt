@@ -1,0 +1,94 @@
+keyhole 0.7.0 — the pages with no root at all
+corpus: 82 urls (uncurated + the nine the gate was built on)   floor 200
+
+== the two reasons the guard bundles into one `continue`
+   kept < 200 (a fact about the page):              6
+   no root at all (a fact about the tool):             13
+     of those, above the floor — dropped by the guard, not the floor: 11
+     of those, below the floor — the floor would have dropped them: 2
+   measurable (scope + floor):                         63
+
+   the no-root pages above the floor — the corpus's four largest pages among them:
+   src              kept  no-chrome  page delta  shipped   span  in_root   url
+   lobsters       47,507     47,507           0       no     no        0   https://blueberrywren.dev/blog/primes/
+   hn             33,121     33,124           3       no     no        0   https://terrytao.wordpress.com/2026/10/09/what-mathematicians-should-know-about-the-lean-theorem-proverquestions-of-reliability-and-ai/
+   lobsters       16,181     16,309         128       no     no        0   https://sheets.works/data-viz/holding-up-the-internet
+   old-blogrust   15,916     16,243         327       no     no        0   https://blog.rust-lang.org/
+   lobsters        5,351      5,410          59       no     no        0   https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+   lobsters        4,743      4,811          68       no     no        0   https://casuarina.org/news/ending-the-casuarina-linux-experiment/
+   old-hn          4,102      4,102           0       no     no        0   https://news.ycombinator.com/news
+   lobsters        3,800      3,871          71       no     no        0   https://lumi.codeberg.page/blog/software-community.html
+   hn              1,520      1,520           0       no     no        0   https://typesafe.ai/blog/series-ai
+   hn                628        671          43       no     no        0   https://carrierexplode.com/
+   hn                209        209           0       no     no        0   https://www.nature.com/articles/s41598-020-73426-0
+
+== honest price on the extended corpus (74 measurable pages)
+   fires:  shipped 1   span 1   hybrid 1   hybrid2 1
+     shipped fires: https://en.wikipedia.org/wiki/Torrebaja  scope main>div.mw-content-ltr  kept 2,752  in_root 3,291
+     span    fires: https://en.wikipedia.org/wiki/Torrebaja  scope main>div.mw-content-ltr  kept 2,752  in_root 3,291
+     hybrid  fires: https://en.wikipedia.org/wiki/Torrebaja  scope main>div.mw-content-ltr  kept 2,752  in_root 3,291
+     hybrid2 fires: https://en.wikipedia.org/wiki/Torrebaja  scope main>div.mw-content-ltr  kept 2,752  in_root 3,291
+   hybrid2 vs shipped: 0 added, 0 dropped
+   the twenty-fifth's row fires on the same pages as this one: YES
+   page order: 74 pages pinned by url — invariant to the counter under test   sample digest d852e67a98f1e413
+
+== fuzz A (all measurable, 74 pages): 1500 rounds, 74 pages in the sample
+             caught  missed   silent  no-cost  partial
+   shipped       19       3   0/3          23       12
+   span          21       1   2/3          23       15
+   hybrid        19       3   0/3          23       12
+   hybrid2       20       2   1/3          23       16
+   ptext         19       3   0/3           0       11
+   mutations scored 1500   real 22   silent 3   on a page whose region is empty 1
+     regionless: lobsters     clean 5,351 kept 1,768 no-chrome 5,416 scope none
+       https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+   shipped MISSED: wikirandom https://en.wikipedia.org/wiki/Parish_of_Coyurunda
+      clean 1,395 kept 621 (lost 774)  no-chrome 1,403  rung strict  scope main>section#mwAQ  in_root 489
+   shipped MISSED: hn https://blog.janestreet.com/can-you-use-autoregressive-diffusion-to-generate-market-data/
+      clean 11,161 kept 838 (lost 10,323)  no-chrome 56  rung strict  scope empty-root  in_root 55
+   shipped MISSED: lobsters https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+      clean 5,351 kept 1,768 (lost 3,583)  no-chrome 5,416  rung strict  scope none  in_root 0
+   hybrid2 MISSED: wikirandom https://en.wikipedia.org/wiki/Parish_of_Coyurunda
+      clean 1,395 kept 621 (lost 774)  no-chrome 1,403  rung strict  scope main>section#mwAQ  in_root 489
+   hybrid2 MISSED: hn https://blog.janestreet.com/can-you-use-autoregressive-diffusion-to-generate-market-data/
+      clean 11,161 kept 838 (lost 10,323)  no-chrome 56  rung strict  scope empty-root  in_root 55
+   page order: 11 pages pinned by url — invariant to the counter under test   sample digest 23aa31254047064a
+
+== fuzz B (no-root pages alone, 11 pages): 1500 rounds, 11 pages in the sample
+             caught  missed   silent  no-cost  partial
+   shipped        0      30   0/30          0        0
+   span          30       0  30/30          1       27
+   hybrid         0      30   0/30          0        0
+   hybrid2       30       0  30/30          1       27
+   ptext          0      30   0/30          0        0
+   mutations scored 1500   real 30   silent 30   on a page whose region is empty 30
+     regionless: lobsters     clean 5,351 kept 252 no-chrome 5,410 scope none
+       https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+     regionless: old-hn       clean 4,102 kept 339 no-chrome 4,102 scope none
+       https://news.ycombinator.com/news
+     regionless: lobsters     clean 5,351 kept 292 no-chrome 5,417 scope none
+       https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+     regionless: lobsters     clean 5,351 kept 2,587 no-chrome 5,411 scope none
+       https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+   shipped MISSED: lobsters https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+      clean 5,351 kept 252 (lost 5,099)  no-chrome 5,410  rung strict  scope none  in_root 0
+   shipped MISSED: old-hn https://news.ycombinator.com/news
+      clean 4,102 kept 339 (lost 3,763)  no-chrome 4,102  rung strict  scope none  in_root 0
+   shipped MISSED: lobsters https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+      clean 5,351 kept 292 (lost 5,059)  no-chrome 5,417  rung strict  scope none  in_root 0
+   shipped MISSED: lobsters https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+      clean 5,351 kept 2,587 (lost 2,764)  no-chrome 5,411  rung strict  scope none  in_root 0
+   shipped MISSED: lobsters https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+      clean 5,351 kept 595 (lost 4,756)  no-chrome 5,410  rung strict  scope none  in_root 0
+   shipped MISSED: lobsters https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+      clean 5,351 kept 2,661 (lost 2,690)  no-chrome 5,411  rung strict  scope none  in_root 0
+
+== left out (8) — named, not folded into a total
+   hn           under the floor (0 kept, scope empty-root  )  https://minesweeper.mikelacher.com/
+   hn           under the floor (0 kept, scope empty-root  )  https://beaksec.github.io/posts/telegram-desktop-one-click-account-takeover/
+   hn           under the floor (51 kept, scope none        )  https://atarimuseum.nl/atari-falcon/
+   lobsters     under the floor (0 kept, scope empty-root  )  https://bevy.org/news/bevy-0-20/
+   wikirandom   under the floor (60 kept, scope main>section#mwAQ)  https://en.wikipedia.org/wiki/Zacatecas_%28disambiguation%29
+   old-example  under the floor (156 kept, scope none        )  https://example.com
+   hn           not html                        https://twitter.com/WallStreetApes/status/2108594998656807078
+   hn           not html                        https://www.bloomberg.com/news/articles/2026-10-09/data-center-darling-s-30-billion-ipo-dream-crushed-in-48-hours

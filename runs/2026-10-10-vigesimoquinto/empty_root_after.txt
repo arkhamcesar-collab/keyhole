@@ -1,0 +1,57 @@
+keyhole 0.7.0 — the price of a gate with two regions
+corpus: 82 urls (uncurated + the nine the gate was built on)
+
+   page order: 63 pages pinned by url — invariant to the counter under test   sample digest 24455059b09c0ea1
+== honest corpus: 63 measurable pages, 2 of them with an empty region
+
+   the empty-region pages, and what `span` reads there — the whole-page delta the hybrid would use:
+   src              kept  no-chrome  page delta    span span fires   url
+   hn             11,161         56     -11,105    0.0%         no   https://blog.janestreet.com/can-you-use-autoregressive-diffusion-to-generate-market-data/
+   hn              2,513      2,535          22    0.9%         no   https://readrare.com/
+
+   fires on the honest corpus:  shipped 1   span 1   hybrid 1
+     shipped fires: https://en.wikipedia.org/wiki/Torrebaja  scope main>div.mw-content-ltr  kept 2,752  in_root 3,291
+     span    fires: https://en.wikipedia.org/wiki/Torrebaja  scope main>div.mw-content-ltr  kept 2,752  in_root 3,291
+     hybrid  fires: https://en.wikipedia.org/wiki/Torrebaja  scope main>div.mw-content-ltr  kept 2,752  in_root 3,291
+   the two counters fire on the same page(s): YES
+
+   hybrid vs shipped, page by page: 0 relaxation added, 0 relaxation dropped
+     (identical to the shipped gate on every honest page: the hybrid's second region costs nothing where it applies)
+
+== fuzz: 1500 mutations that open a suppression inside the root (the sibling's loop, its truth, its order)
+   mutations scored:                     1500
+   the mutation really ate the article:  20
+   of those, SILENT (parse=strict):      0   <-- what the gate exists to catch
+   of those, on a page whose region is empty: 1   <-- the hybrid's reason to exist
+     hn           https://readrare.com/
+       clean 2,513 kept 314 no-chrome 2,535 scope empty-root
+
+             caught  missed   silent  no-cost  partial
+   shipped       19       1   0/0          20       18
+   span          20       0   0/0          20       19
+   hybrid        20       0   0/0          20       18
+   ptext         17       3   0/0           0       13
+   punion        18       2   0/0           0       13
+   shipped MISSED: hn https://readrare.com/
+      clean 2,513 kept 314 (lost 2,199)  no-chrome 2,535  rung trunc-root:88%  scope empty-root  in_root 0
+
+== left out (19) — named, not folded into a total
+   hn           no region (0 kept, scope empty-root)     https://minesweeper.mikelacher.com/
+   hn           no region (0 kept, scope empty-root)     https://beaksec.github.io/posts/telegram-desktop-one-click-account-takeover/
+   hn           no region (628 kept, scope none)         https://carrierexplode.com/
+   hn           no region (1520 kept, scope none)        https://typesafe.ai/blog/series-ai
+   hn           not html                                 https://twitter.com/WallStreetApes/status/2108594998656807078
+   hn           no region (209 kept, scope none)         https://www.nature.com/articles/s41598-020-73426-0
+   hn           no region (51 kept, scope none)          https://atarimuseum.nl/atari-falcon/
+   hn           no region (33121 kept, scope none)       https://terrytao.wordpress.com/2026/10/09/what-mathematicians-should-know-about-the-lean-theorem-proverquestions-of-reliability-and-ai/
+   hn           not html                                 https://www.bloomberg.com/news/articles/2026-10-09/data-center-darling-s-30-billion-ipo-dream-crushed-in-48-hours
+   lobsters     no region (47507 kept, scope none)       https://blueberrywren.dev/blog/primes/
+   lobsters     no region (5351 kept, scope none)        https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+   lobsters     no region (0 kept, scope empty-root)     https://bevy.org/news/bevy-0-20/
+   lobsters     no region (3800 kept, scope none)        https://lumi.codeberg.page/blog/software-community.html
+   lobsters     no region (16181 kept, scope none)       https://sheets.works/data-viz/holding-up-the-internet
+   lobsters     no region (4743 kept, scope none)        https://casuarina.org/news/ending-the-casuarina-linux-experiment/
+   wikirandom   no region (60 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/Zacatecas_%28disambiguation%29
+   old-blogrust no region (15916 kept, scope none)       https://blog.rust-lang.org/
+   old-example  no region (156 kept, scope none)         https://example.com
+   old-hn       no region (4102 kept, scope none)        https://news.ycombinator.com/news

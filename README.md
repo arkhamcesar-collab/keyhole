@@ -206,6 +206,27 @@ page the shipped gate fires on. In the fuzz the extended branch goes from
 the rootless one, with the no-cost column unchanged (23 and 0). Two fixtures in
 `TestNoRootGate` fail on the old ladder.
 
+**The band under the gate's threshold: one case, not a family**
+(`tests/probe_band.py`) — the twenty-sixth left this question open with a name and
+two numbers: in the extended sample a mutation of `Parish_of_Coyurunda` really ate
+the article (`kept` 621 against `in_root` 489) and no reading saw it, because the
+gate's judgment is `sup_in_root > kept`. How many real truncations live in that
+band? The probe answers it by moving the threshold instead of the counter: the
+shipped judgment with `kept` divided by 2, 3 and 4, added as rows so the sibling's
+own fuzz scores them with the sibling's truth. On the 74-page sample the three real
+truncations the gate misses are `Parish` (in_root 489, share 44.1%, kept/in_root
+**1.27x**), the inverted janestreet variant (in_root 55, **15.24x**) and the
+rootless `purplesyringa` (in_root **0**) — so **exactly one sits in the band** and
+the other two have no numerator for any threshold to move. The price of the rung
+that reaches it, on both sides: 0 honest pages (the band (33.3%, 50%] is empty,
+while (25%, 33%] holds 5 and (20%, 25%] holds 4, so the gap is above 28.8% and not
+"no pages around there"), +1 no-cost relaxation in 1,500 mutations, no capture
+lost; one rung lower costs 5 honest pages and 103 no-cost fires for nothing. The
+corpus's own shares have a gap between 28.8% and 54.5% and the shipped threshold
+sits inside it. Also dated: sample A's published `reales 22, silentes 3` is the
+number *before* the twenty-sixth's own fix; the same digest with the fix gives
+silent 2, because `purplesyringa` now ships as `trunc-root:67%`.
+
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
 abandoned whenever it would keep nothing, so a rung-2 result can never be empty
@@ -381,6 +402,7 @@ python tests/probe_region.py --fuzz 1500      # the loss the caller reads, and t
 python tests/probe_drop.py --fuzz 1500        # the same hole in the shipped gate, and its price
 python tests/probe_empty_root.py --fuzz 1500 --order=url   # the fix's price, before it was built
 python tests/probe_no_root.py --fuzz 1500 --order=url      # the pages with no root: the second way of having no region
+python tests/probe_band.py --fuzz 1500 --order=url --extended   # the band under the threshold: one case, not a family
 ```
 
 ## Use it from an agent (MCP)

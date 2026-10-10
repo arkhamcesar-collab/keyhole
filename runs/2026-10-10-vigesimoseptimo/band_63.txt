@@ -1,0 +1,85 @@
+keyhole 0.7.0 — the band under the gate's threshold
+corpus: 82 urls (uncurated + the nine the gate was built on)   floor 200
+
+   page order: 63 pages pinned by url — invariant to the counter under test   sample digest 24455059b09c0ea1
+
+== the honest corpus: where its own shares fall (63 pages)
+   the thresholds a share has to cross:  shipped 50.0%   half 33.3%   third 25.0%   quarter 20.0%
+   shipped  fires  1  wikirandom 54.5%
+   half     fires  1  wikirandom 54.5%
+   third    fires  6  wikirandom 26.8%, wikirandom 27.8%, wikirandom 27.3%, wikirandom 54.5%, hn 28.8%, hn 26.4%
+   quarter  fires 10  wikirandom 26.8%, wikirandom 27.8%, wikirandom 27.3%, wikirandom 20.4%, wikirandom 20.8%, wikirandom 22.0%, wikirandom 54.5%, hn 28.8%, hn 26.4%, old-npm 22.4%
+   band (50.0%, 100.0%]:  1 honest page(s)  <-- the price of that rung
+     wikirandom   share  54.5%  kept   2,752  in_root   3,291  https://en.wikipedia.org/wiki/Torrebaja
+   band (33.3%, 50.0%]:  0 honest page(s)
+   band (25.0%, 33.3%]:  5 honest page(s)  <-- the price of that rung
+     wikirandom   share  26.8%  kept   1,104  in_root     405  https://en.wikipedia.org/wiki/Borja_Rubiato
+     wikirandom   share  27.8%  kept   4,843  in_root   1,866  https://en.wikipedia.org/wiki/Caladenia_caesarea
+     wikirandom   share  27.3%  kept   5,338  in_root   2,008  https://en.wikipedia.org/wiki/Holy_Cross_Crusaders_women%27s_basketball
+     hn           share  28.8%  kept   1,967  in_root     795  https://oss.lsantos.dev/proton-drive-linux-fs/
+     hn           share  26.4%  kept   5,968  in_root   2,141  https://www.broadinstitute.org/news/clinical-trial-prion-disease-drug-candidate-begins-enrolling-participants
+   band (20.0%, 25.0%]:  4 honest page(s)  <-- the price of that rung
+     wikirandom   share  20.4%  kept   7,248  in_root   1,855  https://en.wikipedia.org/wiki/Kanchenjungha
+     wikirandom   share  20.8%  kept   6,711  in_root   1,767  https://en.wikipedia.org/wiki/Miguel_Maury_Buend%C3%ADa
+     wikirandom   share  22.0%  kept   1,395  in_root     393  https://en.wikipedia.org/wiki/Parish_of_Coyurunda
+     old-npm      share  22.4%  kept   1,042  in_root     300  https://www.npmjs.com/package/react
+   share distribution:  max 54.5%  p90 22.4%  median 2.3%  p10 0.0%
+   worst ten pages by share:
+     wikirandom   share  54.5%  kept   2,752  in_root   3,291  rung trunc-root:54%
+     hn           share  28.8%  kept   1,967  in_root     795  rung strict
+     wikirandom   share  27.8%  kept   4,843  in_root   1,866  rung strict
+     wikirandom   share  27.3%  kept   5,338  in_root   2,008  rung strict
+     wikirandom   share  26.8%  kept   1,104  in_root     405  rung strict
+     hn           share  26.4%  kept   5,968  in_root   2,141  rung strict
+     old-npm      share  22.4%  kept   1,042  in_root     300  rung strict
+     wikirandom   share  22.0%  kept   1,395  in_root     393  rung strict
+     wikirandom   share  20.8%  kept   6,711  in_root   1,767  rung strict
+     wikirandom   share  20.4%  kept   7,248  in_root   1,855  rung strict
+
+== fuzz 1500 mutations on the sibling's own sample (digest 24455059b09c0ea1)
+   mutations scored 1500   real truncations 20   of those silent (parse=strict) 0
+             caught  missed   silent  no-cost  partial
+   shipped       19       1   0/0          20       18
+   half          19       1   0/0          27       28
+   third         19       1   0/0         132       53
+   quarter       19       1   0/0         254       80
+
+== the band, which is the question: real truncations no rung reaches
+   more was thrown than kept (shipped):  missed 1
+   ...than kept/2 (half   ):  missed 1   -> 0 real case(s) in the band above it
+   ...than kept/3 (third  ):  missed 1   -> 0 real case(s) in the band above it
+   ...than kept/4 (quarter):  missed 1   -> 0 real case(s) in the band above it
+
+== named: every real truncation the shipped gate misses
+   hn           clean 2,513 kept 314 (lost 2,199)  in_root 0  share   0.0%  kept/in_root   inf  rung trunc-root:88%   <-- structural zero: no region to divide by, so no threshold on in_root can ever reach it
+     https://readrare.com/
+   still missed by half    :
+   hn           clean 2,513 kept 314 (lost 2,199)  in_root 0  share   0.0%  kept/in_root   inf  rung trunc-root:88%
+     https://readrare.com/
+   still missed by third   :
+   hn           clean 2,513 kept 314 (lost 2,199)  in_root 0  share   0.0%  kept/in_root   inf  rung trunc-root:88%
+     https://readrare.com/
+   still missed by quarter :
+   hn           clean 2,513 kept 314 (lost 2,199)  in_root 0  share   0.0%  kept/in_root   inf  rung trunc-root:88%
+     https://readrare.com/
+
+== left out (19) — named, not folded into a total
+   hn           no region (0 kept, scope empty-root)     https://minesweeper.mikelacher.com/
+   hn           no region (0 kept, scope empty-root)     https://beaksec.github.io/posts/telegram-desktop-one-click-account-takeover/
+   hn           no region (628 kept, scope none)         https://carrierexplode.com/
+   hn           no region (1520 kept, scope none)        https://typesafe.ai/blog/series-ai
+   hn           not html                                 https://twitter.com/WallStreetApes/status/2108594998656807078
+   hn           no region (209 kept, scope none)         https://www.nature.com/articles/s41598-020-73426-0
+   hn           no region (51 kept, scope none)          https://atarimuseum.nl/atari-falcon/
+   hn           no region (33121 kept, scope none)       https://terrytao.wordpress.com/2026/10/09/what-mathematicians-should-know-about-the-lean-theorem-proverquestions-of-reliability-and-ai/
+   hn           not html                                 https://www.bloomberg.com/news/articles/2026-10-09/data-center-darling-s-30-billion-ipo-dream-crushed-in-48-hours
+   lobsters     no region (47507 kept, scope none)       https://blueberrywren.dev/blog/primes/
+   lobsters     no region (5351 kept, scope none)        https://purplesyringa.moe/blog/vectorized-clz-and-ctz/
+   lobsters     no region (0 kept, scope empty-root)     https://bevy.org/news/bevy-0-20/
+   lobsters     no region (3800 kept, scope none)        https://lumi.codeberg.page/blog/software-community.html
+   lobsters     no region (16181 kept, scope none)       https://sheets.works/data-viz/holding-up-the-internet
+   lobsters     no region (4743 kept, scope none)        https://casuarina.org/news/ending-the-casuarina-linux-experiment/
+   wikirandom   no region (60 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/Zacatecas_%28disambiguation%29
+   old-blogrust no region (15916 kept, scope none)       https://blog.rust-lang.org/
+   old-example  no region (156 kept, scope none)         https://example.com
+   old-hn       no region (4102 kept, scope none)        https://news.ycombinator.com/news

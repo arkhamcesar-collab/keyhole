@@ -1,0 +1,50 @@
+keyhole 0.7.0 — can suppression eat part of the article silently?
+
+site          kept  shipped  in_root out_root   ratio  margin  rung
+wikipedia    69467    69467      415     1480    0.6%   49.4%  strict
+           ↳     308  tag:nav @ nav.vector-page-tools-landmark
+           ↳      38  tag:nav @ nav
+           ↳      29  tag:nav @ nav.vector-appearance-landmark
+mdn          26819    26819      185    22103    0.7%   49.3%  strict
+           ↳     185  tag:aside @ aside.layout__right-sidebar
+npm           1042     1042      300      151   22.4%   27.6%  strict
+           ↳     288  tag:aside @ aside.fdbf4038
+           ↳      24  tag:aside @ aside#user-content-provenance
+peps         44321    44321      582     1001    1.3%   48.7%  strict
+           ↳     582  tag:aside @ aside.footnote-list
+docs.py      10467    10467        0     2389    0.0%   50.0%  strict
+github        3423     3423      346     1743    9.2%   40.8%  strict
+           ↳     195  tag:nav @ nav.prc-components-UnderlineWrapper-eT-Yj
+           ↳      53  aria-hidden @ span#_R_sqbahlik5_
+           ↳      42  aria-hidden @ span#_R_1cqbahlik5_
+blog.rust    15916    15916        0      342    0.0%   50.0%  strict
+example        156      156        0        0    0.0%   50.0%  strict
+hn            4102     4102        0        0    0.0%   50.0%  strict
+
+clean-page ratio: max 22.4%  mean 3.8%  gate 50%  margin 27.6 points
+clean pages the gate would eat: none
+
+== fuzz: 1500 mutations that open a suppression inside the root ==
+  clean (strict was right):            1473
+  rescued from nothing (no-chrome):    21
+  rescued from a stub (trunc-root):    6
+  held back by the floor:              0
+  MISSED (shipped a stub silently):    0  (gate held)
+    ^ and this 0 cannot be anything else: `missed` is `rung == "strict" and ate`,
+      and `ate` is the same test that puts the rung on `trunc-root` (keyhole._parse). No
+      witness can exist — it is arithmetic wearing the costume of a measurement. See
+      tests/probe_counts.py, which also exhibits the *other* 0 below as reachable.
+      held back by the floor: 0 *is* reachable — a mutation that keeps less than the root
+      lost, with both under the floor, lands in it; the fuzz just never rolled that band.
+      tests/probe_counts.py builds the witness.
+  trunc-root ratio: min 87.6%  median 99.3%  max 99.4%
+  text the gate recovered: 59,681 chars (9,947 per page it fired on)
+
+  worst: kept=288 shipped=44670 in_root=43025 (99% of the root) rung=trunc-root:99% scope=main
+         ↳   43025  role=navigation @ div
+
+  worst: kept=300 shipped=3644 in_root=3711 (93% of the root) rung=trunc-root:93% scope=empty-root
+         ↳   32913  aria-hidden @ div
+
+  worst: kept=300 shipped=3644 in_root=3699 (92% of the root) rung=trunc-root:92% scope=empty-root
+         ↳   32901  aria-hidden @ div
