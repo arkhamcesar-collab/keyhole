@@ -81,6 +81,24 @@ The tenth awakening's conclusion survives the eleventh: no candidate is a strict
 improvement, `ptext`/`ppara` remain the only readings with zero false positives,
 and the gate that ships is still the shipped one.
 
+Twenty-third awakening — the prose row's own two halves. The twenty-second found
+that the prose row of `probe_gate_span` (`_ParaLoss`) was not blind but *looking
+the other way*: it counted only a `<p>` opened before the suppression and still
+open across it, so it saw inline chrome and missed the block chrome that ate whole
+paragraphs. The fix made that row count a `<p>` opened on *either* side, and the
+union is a strict superset of this probe's `ptext` (6,319 vs 5,566 characters on
+the honest corpus). The open question it left is whether *this* probe should read
+the union too, and the reading that is a matter of measurement rather than taste is
+
+    punion  the same structural reading, plus everything a `<p>` opened *outside*
+            the frame removed: the union, as a row in the fuzz that grades
+            against the page
+
+with the 753 characters it adds **named** rather than counted, and the union
+cross-checked page by page against the span family's own `_ParaLoss` (0
+disagreements expected; a probe that quietly disagrees with its sibling is the
+second-costume sin, not a second opinion).
+
 Run:  python tests/probe_gate_pos.py [--fuzz N] [--min-chars N] [--order=url]
 
 `--order=url` pins the page order on the URL instead of on `shipped_share`, so
@@ -102,7 +120,7 @@ from keyhole import _NoChromeReader, _Reader  # noqa: E402
 
 DEFAULT_LIST = os.path.join(HERE, "tests", "corpus", "gate_urls.txt")
 
-CANDIDATES = ("shipped", "span", "ptext", "open", "ppara", "plist")
+CANDIDATES = ("shipped", "span", "ptext", "open", "ppara", "plist", "punion")
 
 # Which kind of element held the text suppression removed. Only containers that
 # plausibly carry article text; everything else (a bare link label, a `<div>`
@@ -123,6 +141,7 @@ def _load_sibling(name: str):
 
 _pg = _load_sibling("probe_gate")
 _pr = _load_sibling("probe_rules")
+_ps = _load_sibling("probe_gate_span")
 
 
 def _fmt_kinds(kinds) -> str:
@@ -155,11 +174,20 @@ class _PosReader(_Reader):
         rule) so the tenth awakening's numbers stay comparable; the breakdown
         only ever counts text that is *not* inside a suppressed `<p>`, so the
         two never double-count the same characters.
+      * `sup_pinline` — the other half of the same criterion. The prose row in
+        `probe_gate_span` (`_ParaLoss`) now counts a `<p>` opened on *either*
+        side of the suppression, and that union is a strict superset of
+        `sup_ptext`: 6,319 vs 5,566 characters on the honest corpus, and the 753
+        it adds are counted where a `<p>` was already open *outside* the frame.
+        This counter measures that half separately instead of assuming it is
+        prose — and names it (`inline_samples`).
     """
 
     def __init__(self, scope: bool = True):
         super().__init__(scope)
         self.sup_ptext = 0
+        self.sup_pinline = 0
+        self.inline_samples: list[tuple[str, str]] = []
         self.sup_kind: dict[str, int] = {}
         self.frames: list[dict] = []
         self._sup_p = 0          # <p> open, in the suppressed subtree
@@ -213,6 +241,18 @@ class _PosReader(_Reader):
                 self.sup_ptext += len(data)
                 kind = "p"
             else:
+                if self._para_depth:
+                    # The union's extra half: a paragraph that was opened
+                    # *before* the frame and is still open through it. Whether
+                    # that is prose is not a matter of taste — it is a question
+                    # about what the frame actually removed, so the counter
+                    # keeps the text and the frame it came from.
+                    self.sup_pinline += len(data)
+                    if len(self.inline_samples) < 6:
+                        lab = next((f["label"] for f in reversed(self.frames)
+                                    if f["how"] is None), "?")
+                        self.inline_samples.append(
+                            (lab, " ".join(data.split())[:60]))
                 kind = self._marks[-1] if self._marks else "other"
                 self.sup_kind[kind] = self.sup_kind.get(kind, 0) + len(data)
             for f in reversed(self.frames):
@@ -246,6 +286,7 @@ def candidates(html: str) -> dict:
     pos = keyhole._reader(html, _PosReader)
     floor = keyhole.EMPTY_TEXT
     ptext = pos.sup_ptext
+    punion = ptext + pos.sup_pinline
     li = pos.sup_kind.get("li", 0)
     plist = ptext + li
     open_ = sum(f["chars"] for f in pos.frames if f["how"] != "matched")
@@ -255,6 +296,9 @@ def candidates(html: str) -> dict:
         "kept_para": pos._para,
         "sup_in_root": m["drop_in_root"],
         "sup_ptext": ptext,
+        "sup_pinline": pos.sup_pinline,
+        "sup_punion": punion,
+        "inline_samples": pos.inline_samples,
         "sup_li": li,
         "sup_plist": plist,
         "sup_kind": pos.kinds(),
@@ -264,6 +308,12 @@ def candidates(html: str) -> dict:
         "span_share": (lost / kept_nc) if kept_nc else 0.0,
         "span_fires": lost > kept and lost > floor,
         "ptext_fires": ptext > kept and ptext > floor,
+        # The twenty-second awakening's row, carried into the fuzz that grades
+        # against the page instead of against a candidate: the prose row of
+        # `probe_gate_span` counts a `<p>` opened on *either* side of the
+        # suppression. Reading the union instead of the structural half is the
+        # question, so it is a row and not an opinion.
+        "punion_fires": punion > kept and punion > floor,
         # Prose lost measured against prose kept — the one pairing where both
         # sides are the same region *and* the same kind of text. `ptext` above
         # divides the root's paragraph loss by the narrowed span's whole text,
@@ -380,6 +430,7 @@ def fuzz(pages, clean_kept, rounds, seed=0):
                         "label": label, "clean": clean, "kept": c["kept"],
                         "lost": lost, "kinds": dict(c["sup_kind"]),
                         "ptext": c["sup_ptext"], "li": c["sup_li"],
+                        "inline": c["sup_pinline"],
                     })
     return out
 
@@ -428,6 +479,7 @@ def main():
           f"corpus: {len(urls)} urls (uncurated + the nine the gate was built on)\n")
 
     rows, skipped = [], []
+    desync = []
     for src, url in urls:
         if not _pg.is_html(url):
             skipped.append((src, url, "not html"))
@@ -441,17 +493,27 @@ def main():
         if c["kept"] < floor or not c["scope"]:
             skipped.append((src, url, f"no region ({c['kept']} kept, scope {c['scope'] or 'none'})"))
             continue
+        # The union this probe adds must be the *same number* as the prose row of
+        # the span family — same criterion, two instruments. If it is not, this
+        # probe is measuring something of its own and every comparison with the
+        # 22nd awakening's runs is off: the instrument that quietly disagrees with
+        # its sibling is the second-costume sin.
+        union_row = keyhole._reader(html, _ps._ParaLoss).sup_para
+        if union_row != c["sup_punion"]:
+            desync.append((src, url, union_row, c["sup_punion"]))
         rows.append({"src": src, "url": url, **c})
 
     pin_order(rows, sys.argv)
     print(f"{'src':<12} {'kept':>7} {'kc':>7} {'in_root':>8} {'in_ptext':>8} "
-          f"{'in_li':>7} {'unclosed':>8} {'shipped':>8} {'region':>8}  fires")
-    print("-" * 104)
+          f"{'in_line':>7} {'in_li':>7} {'unclosed':>8} {'shipped':>8} {'region':>8}  fires")
+    print("-" * 112)
     for r in rows:
         fires = (("S" if r["shipped_fires"] else "-") + ("R" if r["span_fires"] else "-")
-                 + ("P" if r["ptext_fires"] else "-") + ("O" if r["open_fires"] else "-"))
+                 + ("P" if r["ptext_fires"] else "-") + ("U" if r["punion_fires"] else "-")
+                 + ("O" if r["open_fires"] else "-"))
         print(f"{r['src']:<12} {r['kept']:>7} {r['kept_nc']:>7} {r['sup_in_root']:>8} "
-              f"{r['sup_ptext']:>8} {r['sup_li']:>7} {r['sup_open']:>8} "
+              f"{r['sup_ptext']:>8} {r['sup_pinline']:>7} {r['sup_li']:>7} "
+              f"{r['sup_open']:>8} "
               f"{r['shipped_share'] * 100:>7.1f}% {r['span_share'] * 100:>7.1f}%  {fires}")
 
     print(f"\n== {len(rows)} measurable pages  ({len(skipped)} left out, named below)")
@@ -459,6 +521,23 @@ def main():
     for r in rows[:10]:
         print(f"     {r['src']:<12} in_root {r['sup_in_root']:>7}  "
               f"{_fmt_kinds(r['sup_kind'])}")
+    inl = [r for r in rows if r["sup_pinline"]]
+    tot_inl = sum(r["sup_pinline"] for r in inl)
+    tot_uni = sum(r["sup_punion"] for r in rows)
+    tot_str = sum(r["sup_ptext"] for r in rows)
+    print(f"\n   the prose row's two halves, on the honest corpus:  structural "
+          f"{tot_str:,}   inline {tot_inl:,}   union {tot_uni:,}")
+    print(f"   — the union's extra is what a <p> opened *outside* the frame "
+          f"removed ({tot_inl:,} chars on {len(inl)} pages), and it is named here"
+          f" instead of counted:")
+    for r in inl:
+        for lab, snip in r["inline_samples"][:3]:
+            print(f"     {r['src']:<12} {r['sup_pinline']:>5,} in {lab:<26} {snip!r}")
+    print(f"   union cross-check against the span family's own _ParaLoss: "
+          f"{len(rows)} pages, {len(desync)} disagreements"
+          + ("" if not desync else "  <-- DESYNC"))
+    for src, url, a, b in desync[:6]:
+        print(f"     {src:<12} row {a:,} vs probe {b:,}  {url}")
     for k, lbl in (("shipped_share", "shipped (counter vs kept)"),
                    ("span_share", "same region (both passes)")):
         vals = sorted(r[k] for r in rows if r["kept"] >= floor)
@@ -467,9 +546,10 @@ def main():
     print(f"\n   fires on the honest corpus:  "
           + "   ".join(f"{k.replace('_fires', '')} {len([r for r in rows if r[k]])}"
                        for k in ("shipped_fires", "span_fires", "ptext_fires",
-                                 "ppara_fires", "plist_fires", "open_fires")))
-    for k in ("shipped_fires", "span_fires", "ptext_fires", "ppara_fires",
-              "plist_fires", "open_fires"):
+                                 "punion_fires", "ppara_fires", "plist_fires",
+                                 "open_fires")))
+    for k in ("shipped_fires", "span_fires", "ptext_fires", "punion_fires",
+              "ppara_fires", "plist_fires", "open_fires"):
         for r in [r for r in rows if r[k]]:
             print(f"   {k.replace('_fires', ''):<8} fires: {r['url']}  "
                   f"kept {r['kept']:,}  in_root {r['sup_in_root']:,}  "
@@ -508,10 +588,11 @@ def main():
             print(f"   {k:<8} {f[k]['caught']:>7} {f[k]['missed_real']:>7} "
                   f"{f[k]['silent_caught']:>3}/{f['silent']:<4} {f[k]['zero_cost']:>8} "
                   f"{f[k]['partial']:>8}")
-        for k in ("ptext", "plist"):
+        for k in ("ptext", "punion", "plist"):
             for ex in f[k]["examples"]:
                 print(f"   {k} MISSED: {ex['label']}  clean {ex['clean']:,} kept "
                       f"{ex['kept']:,} (lost {ex['lost']:,})  ptext {ex['ptext']:,} "
+                      f"inline {ex['inline']:,} "
                       f"li {ex['li']:,}  eaten: {_fmt_kinds(ex['kinds'])}")
 
     print(f"\n== left out ({len(skipped)}) — named, not folded into a total")

@@ -763,8 +763,16 @@ class TestProseCounter(unittest.TestCase):
     still open across it — which reads inline chrome (a citation bracket inside a
     paragraph) and is blind to block chrome that ate whole paragraphs, because a
     `<p>` opened inside a suppressed frame never increments the shipped reader's
-    depth. Both are prose the reader lost, so the `para` row of
-    `probe_gate_span` is now scored on their union.
+    depth. So the `para` row of `probe_gate_span` is now scored on their union.
+
+    **The twenty-third awakening named the union's extra half and it is not
+    prose**: 753 characters on the honest corpus, all of it chrome (a news rail, a
+    promo card, six aria-hidden glyphs) counted because the parser keeps an
+    article `<p>` open across a frame the browser would have closed it for. The
+    union is kept for the one case it alone can see — a frame that swallows the
+    *continuation* of an already-open paragraph — and it wins that case by scale,
+    not by the criterion. The tests below are about what the counter does; the
+    reason is narrower than "both are prose".
     """
 
     def _para(self, html):
@@ -785,6 +793,28 @@ class TestProseCounter(unittest.TestCase):
         # the counter is about what suppression removed, not about the article
         html = "<main><p>" + "article words " * 40 + "</p></main>"
         self.assertEqual(self._para(html), 0)
+
+    def test_the_probe_union_is_the_same_number_as_this_row(self):
+        """Two instruments, one criterion.
+
+        `probe_gate_pos._PosReader` measures the union as `sup_ptext` plus
+        `sup_pinline`; this row measures it as `sup_para`. A probe that quietly
+        disagrees with its sibling is not a second opinion, it is the
+        second-costume sin — so the agreement is a test and not a print, on the
+        fixtures plus every shape `probe_rules` keeps.
+        """
+        import probe_gate_pos
+        for html in (
+            "<main><p>" + "article words " * 40 + "<aside>edit this page</aside></p></main>",
+            "<main><p>" + "article words " * 40 + "</p><aside><p>"
+            + "place name " * 30 + "</p></aside></main>",
+            "<main><nav><ul><li>" + "menu item " * 20 + "</li></ul></nav><p>"
+            + "article words " * 40 + "</p></main>",
+            "<main><p>" + "article words " * 40 + "<div class=\"sidebar\">"
+            + "promo " * 30 + "</div></p></main>",
+        ) + tuple(probe_rules.FIXTURES.values()):
+            c = probe_gate_pos.candidates(html)
+            self.assertEqual(c["sup_punion"], self._para(html))
 
 
 @unittest.skipUnless(os.environ.get("KEYHOLE_NET_TESTS"), "set KEYHOLE_NET_TESTS=1 for live checks")

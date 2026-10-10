@@ -93,6 +93,27 @@ manages 34) and 0 fires on the honest corpus. Measured, not built: a gate made o
 that union needs the reader to track frame endings and suppressed prose, which is a
 change to `keyhole.py` and not a line in a probe.
 
+**The prose row's other half, and the union's extra is not prose**
+(`probe_gate_pos --order=url`) — the prose row of `probe_gate_span` was fixed in the
+twenty-second awakening to count a `<p>` opened on *either* side of the suppression,
+and that union is a strict superset of `ptext`: 6,319 against 5,566 characters of the
+33,521 the honest corpus's chrome removes. The 753 it adds are now **named** instead
+of counted (the probe prints them): 726 characters of Gizmodo's `aside.flex-none`
+news rail, 21 of a "Enjoyed this article?" promo card, 6 aria-hidden `›` glyphs —
+all chrome, none of it prose the reader lost. They are counted because the parser
+keeps an article `<p>` open across a frame the browser would have closed it for, and
+the probe carries the union as a row (`punion`) so the question is a measurement:
+under the page-truth fuzz, pinned on the same 63 pages (`24455059b09c0ea1`), the
+union catches **18 of 20** real truncations where the structural half catches 17, at
+**0** no-cost fires and 13 partials for both (shipped: 19 caught, 20 no-cost). The
+one case it wins is a frame opened inside an already-open paragraph that swallowed
+its *continuation* — the one text the structural reading cannot see by construction
+and the one no kind breakdown can name (it prints as `other`). The union also fires
+**0** times on the honest corpus, so its 753 extra characters cost nothing
+measurable: it wins by scale (1,457 against 1,218), not by the criterion. The union
+is cross-checked per page against the span family's own `_ParaLoss` (0
+disagreements in 63, and a test holds the agreement).
+
 **The loss the caller never read, and the CSS counted as prose**
 (`tests/probe_region.py`) — the union's one no-cost fire, chased to its region and
 found somewhere else. The shipped counter measures the content root; `kept`

@@ -99,6 +99,22 @@ class _ParaLoss(_Reader):
     of 33,521 characters chrome removed from the root, the old condition reads
     2,690 (8.0%), the structural one 5,566 (16.6%), they share 1,937, and the
     union is 6,319 (18.9%): 3,629 the old row never saw, 753 it saw alone.
+
+    **Measured, twenty-third awakening — the union's extra is not prose.** The 753
+    it adds are now *named* (`probe_gate_pos --order=url` prints them): 726
+    characters of Gizmodo's `aside.flex-none` news rail ("Latest news", "Live
+    Updates From New York Comic Con 2026"), 21 of a "Enjoyed this article?" promo
+    card, and 6 aria-hidden `›` prompt glyphs. All chrome; none of it prose the
+    reader lost — they are counted because the parser keeps an article `<p>` open
+    across a frame the browser would have closed it for. The row survives anyway,
+    and for a narrower reason than "both are prose": in the page-truth fuzz the
+    union catches 18 of 20 real truncations where the structural half catches 17,
+    at 0 no-cost fires in both. The case it wins is a chrome frame opened inside
+    an already-open article `<p>` that swallowed the paragraph's *continuation* —
+    text no `<p>` start marks, so no kind breakdown can ever name it (it prints as
+    `other`). It is the one case the structural reading cannot see by
+    construction, and it wins by scale (1,457 characters against 1,218 kept), not
+    by discriminating.
     """
 
     def __init__(self, scope: bool = True):
