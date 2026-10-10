@@ -35,6 +35,15 @@ it still fires only where it should:
   * fuzz, rescued/clean/missed — `missed > 0` means a silent truncation got past
     the gate, which is the one result that fails this probe
 
+One honest note on that second number, measured in ``tests/probe_counts.py``:
+``missed`` **cannot** be greater than zero here, because it is counted as
+``rung == "strict" and ate`` and ``ate`` is exactly the test that puts the rung
+on ``trunc-root`` (``keyhole._parse``). The zero it prints is arithmetic, not a
+reading of the corpus — and it sits in the same output as ``held back by the
+floor``, another zero that *is* reachable (a witness is built in the audit).
+Two zeros, one a theorem and one a fact about 1,500 rolls; telling them apart
+means trying to build a witness, and that is the only difference visible.
+
 Run:  python tests/probe_truncation.py [--fuzz N]
 """
 import importlib.util
@@ -278,6 +287,21 @@ def main():
               + (f" (biggest loss {below_max} chars)" if below else ""))
         print(f"  MISSED (shipped a stub silently):    {missed}"
               + ("  <-- the gate failed" if missed else "  (gate held)"))
+        if not missed:
+            print("    ^ and this 0 cannot be anything else: `missed` is "
+                  "`rung == \"strict\" and ate`,\n"
+                  "      and `ate` is the same test that puts the rung on "
+                  "`trunc-root` (keyhole._parse). No\n"
+                  "      witness can exist — it is arithmetic wearing the "
+                  "costume of a measurement. See\n"
+                  "      tests/probe_counts.py, which also exhibits the *other* "
+                  "0 below as reachable.")
+        if not below:
+            print("      held back by the floor: 0 *is* reachable — a mutation "
+                  "that keeps less than the root\n"
+                  "      lost, with both under the floor, lands in it; the fuzz "
+                  "just never rolled that band.\n"
+                  "      tests/probe_counts.py builds the witness.")
         if ratios:
             recovered_per = recovered / len(ratios)
             print(f"  trunc-root ratio: min {min(ratios) * 100:.1f}%  "

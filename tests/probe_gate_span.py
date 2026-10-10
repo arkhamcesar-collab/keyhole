@@ -132,6 +132,15 @@ def fuzz(pages, rounds, seed=0):
     ``missed`` is the number that fails: a mutation where the strict pass kept a
     minority of the article and the candidate stayed quiet — the silent
     truncation this whole exercise exists to stop.
+
+    Read the ``shipped`` row with one caveat, measured in
+    ``tests/probe_counts.py``: the truth here is ``any(candidate fires)`` and the
+    shipped gate **is one of the candidates**, so this table grades three
+    readings against a truth that one of them supplies. On the same mutations the
+    audit names the cases where that truth calls a mutation real and the page
+    says nothing was lost at all — and every candidate that stays quiet on one of
+    those is charged a *miss* for text nobody lost. ``probe_gate_pos`` is the
+    probe that grades against the page instead.
     """
     rnd = random.Random(seed)
     out = {k: {"missed": 0, "fires": 0} for k in CANDIDATES}
@@ -258,6 +267,12 @@ def main():
             print(f"   {k:<8} fires {f[k]['fires']:>5}   MISSED {f[k]['missed']:>4}"
                   + ("   <-- silent truncation" if f[k]["missed"] else "   (gate held)"))
         print(f"   cases only one of them catches:      {f['either_missed']}")
+        print(f"   ^ the truth above is `any(candidate fires)` and `shipped` is one "
+              f"of the candidates:\n"
+              f"     this table grades three readings against a truth one of them "
+              f"supplies. tests/probe_counts.py\n"
+              f"     names the mutations it calls real that the page says were "
+              f"never touched.")
 
     print(f"\n== left out ({len(skipped)}) — named, not folded into a total")
     for src, url, why in skipped:
