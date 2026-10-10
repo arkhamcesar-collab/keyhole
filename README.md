@@ -187,6 +187,25 @@ it (two of them fail on the old ladder), and the curated nine-page probe is
 byte-identical before and after (1473 clean / 21 no-chrome / 6 `trunc-root`,
 `MISSED 0`).
 
+**The page with no root at all, and the corpus that dropped its own largest
+pages** (`tests/probe_no_root.py`) — the twenty-fifth wrote the second case off in
+a sentence: *the measured corpus has 13 of those and every one is outside the
+floor.* The floor had excluded two of them. The other eleven were excluded by the
+probe's own guard, `if c["kept"] < floor or not c["scope"]`, which bundles a fact
+about the page with a fact about the tool — and eleven pages is the four largest
+in the corpus (47,507 · 33,121 · 16,181 · 15,916 characters), i.e. exactly the
+pages where a frame has the most to eat. With no root frame open the numerator is
+0 by construction, so the gate cannot fire there at all: on the rootless sample
+(11 pages, digest `23aa31254047064a`) the fuzz's three real truncations are all on
+these pages and **all three ship silently**. The branch that was already there
+for the empty region is the fix — same rule, one more way of having no region —
+and its price is what the honest corpus says: 0 added relaxations across the 74
+pages the corpus can measure, whose only fire is still Torrebaja, the same single
+page the shipped gate fires on. In the fuzz the extended branch goes from
+19 caught / 3 missed to 20 / 2 on the 74-page sample and from 0 / 3 to 3 / 0 on
+the rootless one, with the no-cost column unchanged (23 and 0). Two fixtures in
+`TestNoRootGate` fail on the old ladder.
+
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
 abandoned whenever it would keep nothing, so a rung-2 result can never be empty
@@ -346,7 +365,7 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 82 tests
+python tests/test_keyhole.py                  # offline, 86 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 python tests/probe_density.py                 # measures candidate extraction rules, live
@@ -361,6 +380,7 @@ python tests/probe_reason.py --fuzz 1500      # why a suppression failed, not ho
 python tests/probe_region.py --fuzz 1500      # the loss the caller reads, and the CSS counted as text
 python tests/probe_drop.py --fuzz 1500        # the same hole in the shipped gate, and its price
 python tests/probe_empty_root.py --fuzz 1500 --order=url   # the fix's price, before it was built
+python tests/probe_no_root.py --fuzz 1500 --order=url      # the pages with no root: the second way of having no region
 ```
 
 ## Use it from an agent (MCP)

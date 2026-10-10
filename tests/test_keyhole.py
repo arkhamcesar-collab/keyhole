@@ -902,6 +902,78 @@ class TestEmptyRegionGate(unittest.TestCase):
         self.assertIn("STORY_WORD", keyhole._text_of(r))
 
 
+class TestNoRootGate(unittest.TestCase):
+    """The page with **no root at all** — the second way of having no region.
+
+    Named by the twenty-sixth awakening, which went to write this class off the
+    way the twenty-fifth left it — *the corpus has 13 of those and every one is
+    outside the floor* — and found the sentence false: 11 of the 13 are above the
+    floor, and they are the four largest pages in the corpus. The floor excluded
+    two; the probe's own guard (`if c["kept"] < floor or not c["scope"]`) excluded
+    eleven, and said the floor had.
+
+    What is at stake is structural, not statistical. With no root frame open,
+    `_in_root_region()` is false everywhere, so `sup_in_root` is 0 on the honest
+    page and 0 on the page a frame ate half of, and `ate_the_root` reads
+    `0 > kept` — false on every one of them. On its own sample (11 pages, digest
+    `23aa31254047064a`, order by url) the fuzz's three real truncations are all
+    here and **all three ship silently**; the whole-page delta, the region the
+    twenty-fifth gave the empty-region page, catches 3 of 3 with no cost.
+    """
+
+    HEAD = "HEAD_WORD " * 150          # ~1,500 characters that survive
+    TAIL = "TAIL_WORD " * 400          # ~4,000 the frame eats, unclosed
+
+    HONEST = f'<body><p>{HEAD}</p><p>{TAIL}</p></body>'
+    EATEN = f'<body><p>{HEAD}</p><div class="sidebar"><p>{TAIL}</p></body>'
+
+    def test_a_page_with_no_root_is_judged_by_its_whole_page_delta(self):
+        strict = keyhole._reader(self.EATEN)
+        # No root *at all* — not the same fact as a root whose cut kept nothing,
+        # and until now the two were the same `continue` in the corpus guard.
+        self.assertFalse(strict.scope)
+        self.assertTrue(keyhole._has_content(strict))
+        self.assertEqual(strict.sup_in_root, 0)
+        self.assertFalse(keyhole.ate_the_root(strict))
+        r = keyhole.analyze(self.EATEN)
+        self.assertTrue(r.rung.startswith("trunc-root:"), r.rung)
+        self.assertIn("TAIL_WORD", keyhole._text_of(r))
+
+    def test_the_share_it_names_is_the_page_delta_it_measured(self):
+        strict = keyhole._reader(self.EATEN)
+        nc = keyhole._reader(self.EATEN, keyhole._NoChromeReader)
+        kept_nc = len(keyhole._text_of(nc))
+        lost = kept_nc - len(keyhole._text_of(strict))
+        self.assertGreater(lost, keyhole.EMPTY_TEXT)
+        printed = int(keyhole.analyze(self.EATEN).rung.split(":")[1].rstrip("%"))
+        self.assertEqual(printed, round(lost / kept_nc * 100))
+
+    def test_an_honest_page_with_no_root_is_not_relaxed(self):
+        self.assertFalse(keyhole._reader(self.HONEST).scope)
+        r = keyhole.analyze(self.HONEST)
+        self.assertEqual(r.rung, "strict")
+        self.assertIn("TAIL_WORD", keyhole._text_of(r))
+
+    def test_the_second_region_does_not_leak_onto_a_rooted_page(self):
+        """A page with a root keeps its own judgment: the branch is a second
+        region for the pages that have none, not a wider gate for everyone.
+
+        The fixture is the shape that would leak if the condition were keyed on
+        the page instead of on the region — a huge suppressed nav *outside* the
+        root, which the strict pass drops legitimately. The cut applies in both
+        passes, so none of it comes back; widen the branch to "this page looks
+        like it lost a lot" and this test fails with `NAV_WORD` in the output.
+        """
+        html = (f'<body><nav><p>{"NAV_WORD " * 400}</p></nav>'
+                f'<main><p>{"STORY_WORD " * 200}</p></main></body>')
+        strict = keyhole._reader(html)
+        self.assertEqual(strict.scope, "main")
+        r = keyhole.analyze(html)
+        self.assertEqual(r.rung, "strict")
+        self.assertIn("STORY_WORD", keyhole._text_of(r))
+        self.assertNotIn("NAV_WORD", keyhole._text_of(r))
+
+
 @unittest.skipUnless(os.environ.get("KEYHOLE_NET_TESTS"), "set KEYHOLE_NET_TESTS=1 for live checks")
 class TestLive(unittest.TestCase):
 

@@ -829,9 +829,25 @@ def _parse(html_text: str) -> _Reader:
     would trade a whole page for a five-word teaser.
 
     A page with **no root at all** (``scope`` falsy) has the same empty numerator
-    and is deliberately *not* covered here: the measured corpus has 13 of those
-    and every one is outside the floor, so applying this to them would be an
-    unmeasured change. It is an open thread, not an oversight.
+    for a different reason, and it was written off here at first with a sentence
+    that measurement did not keep: *the measured corpus has 13 of those and every
+    one is outside the floor.* Eleven of the thirteen are **above** the floor, and
+    they are the four largest pages in the corpus (47,507 · 33,121 · 16,181 ·
+    15,916 characters). The floor excluded two; the corpus guard that reported
+    them excluded eleven — ``if c["kept"] < floor or not c["scope"]`` bundles a
+    fact about the page with a fact about the tool, so the pages the gate *cannot*
+    judge were dropped and the floor was named as the reason.
+
+    What that cost: with no root frame open the numerator is 0 by construction
+    (``sup_in_root`` never moves, ``ate_the_root`` reads ``0 > kept``), so every
+    real truncation on these pages ships silently. On their own sample
+    (``tests/probe_no_root.py``, 11 pages, digest ``23aa31254047064a``) the fuzz's
+    three real truncations are all here and all three ship silently; the whole
+    page delta catches 3 of 3, and the extended branch fires on 0 of the 74
+    honest pages the corpus can actually measure (the extended corpus still fires
+    once, on Torrebaja, the same page the shipped gate fires on). So the rule is
+    one rule — judge the page where the gate has no region — with two ways of
+    having no region, and the second one is not an unmeasured change any more.
     """
     p = _reader(html_text)
     if not _has_content(p):
@@ -843,10 +859,13 @@ def _parse(html_text: str) -> _Reader:
         q = _reader(html_text, _NoChromeReader)
         q.rung = f"trunc-root:{lost * 100:.0f}%"
         return q
-    if p.scope == SCOPE_EMPTY_ROOT:
-        # The gate has no region: judge the page, and only when the page lost
-        # more than it kept (the same judgment `ate_the_root` makes about the
-        # root, moved to the one region this page has).
+    if not p.scope or p.scope == SCOPE_EMPTY_ROOT:
+        # The gate has no region — either a root was found and the cut kept
+        # nothing, or there was never a root. Both leave `sup_in_root` at 0 for
+        # the honest page and for the page a frame ate half of, so the shipped
+        # predicate cannot separate them. Judge the page, and only when the page
+        # lost more than it kept (the same judgment `ate_the_root` makes about
+        # the root, moved to the one region these pages have).
         kept = len(_text_of(p))
         q = _reader(html_text, _NoChromeReader)
         kept_nc = len(_text_of(q))
