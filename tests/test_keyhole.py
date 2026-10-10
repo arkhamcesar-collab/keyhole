@@ -178,11 +178,21 @@ class TestContentScope(unittest.TestCase):
         self.assertIn("Whole page", keyhole._markdown_of(p))
 
     def test_empty_main_falls_back_to_the_whole_page(self):
-        """A cut that would empty the page is abandoned, and the scope goes back
-        to empty — a scoping that never happened must not be reported as one."""
+        """A cut that would empty the page is abandoned — and says *that*.
+
+        It used to say nothing: the abandoned cut and "this page has no root at
+        all" were both the empty string, so an extraction that was attempted and
+        failed read exactly like one that was never attempted.
+        """
         html = '<body><p>OUTSIDE_TEXT</p><main></main></body>'
         p = keyhole.analyze(html)
-        self.assertEqual(p.scope, "")
+        self.assertEqual(p.scope, keyhole.SCOPE_EMPTY_ROOT)
+        self.assertNotEqual(p.scope, "")          # never again the same value as "no root"
+        # ...and the row says it, where a reader would see it.
+        row = keyhole.format_batch_row(1, 1, keyhole.Result(url="https://x.dev", status=200, text="t", scope=p.scope))
+        self.assertIn("scope=empty-root", row)
+        row_none = keyhole.format_batch_row(1, 1, keyhole.Result(url="https://x.dev", status=200, text="t"))
+        self.assertIn("scope=none", row_none)
         self.assertIn("OUTSIDE_TEXT", keyhole._markdown_of(p))
 
     def test_role_main_is_a_root(self):
@@ -217,6 +227,59 @@ class TestContentScope(unittest.TestCase):
         p = keyhole.analyze(html)
         self.assertEqual(p.scope, "")
         self.assertIn("KEPT", keyhole._markdown_of(p))
+
+
+class TestNamedRelaxations(unittest.TestCase):
+    """Every heuristic in the extraction is best-effort, so every one of them has
+    to say when it gave up: a relaxed pass that stays quiet is indistinguishable
+    from a page that never needed relaxing."""
+
+    def test_relaxed_pass_names_itself(self):
+        """A malformed document whose whole body sits inside a chrome class comes
+        back from the second pass — which used to be invisible."""
+        html = '<body><div class="sidebar"><p>ONLY_TEXT_ON_PAGE</p></body>'
+        p = keyhole.analyze(html)
+        self.assertEqual(p.rung, "no-chrome")
+        self.assertIn("ONLY_TEXT_ON_PAGE", keyhole._text_of(p))
+        row = keyhole.format_batch_row(1, 1, keyhole.Result(
+            url="https://x.dev", status=200, text=keyhole._text_of(p), parse=p.rung))
+        self.assertIn("[parse=no-chrome]", row)
+
+    def test_a_clean_page_says_nothing(self):
+        """The note is a deviation report: empty means the strict pass, and only
+        that. (A marker on every row would be noise; a marker on none of them
+        would be the bug this class exists for.)"""
+        html = '<body><main><h1>Real</h1><p>Body text here.</p></main></body>'
+        p = keyhole.analyze(html)
+        self.assertEqual(p.rung, "strict")
+        self.assertEqual(keyhole.parse_notes(keyhole.Result(url="u", scope=p.scope)), "")
+
+    def test_whitespace_only_output_is_not_content(self):
+        """REGRESSION: a page whose only markdown is a stray <br> counted as
+        content — so the fallback ladder stopped one rung early and handed back
+        nothing while reporting success. The real text sat inside a chrome class."""
+        html = '<body><br><div class="site-nav"><p>REAL_TEXT</p></div></body>'
+        self.assertEqual(keyhole.html_to_text(html), "REAL_TEXT")
+        self.assertEqual(keyhole.analyze(html).rung, "no-chrome")
+
+    def test_partial_parse_is_named(self):
+        """A parser that raises leaves a truncated page. That is usually worth
+        keeping — but it is a partial page, and unnamed it reads as a short one."""
+        class _Boom(keyhole._Reader):
+            def handle_data(self, data):
+                if "BOOM" in data:
+                    raise ValueError("synthetic parser failure")
+                super().handle_data(data)
+
+        p = keyhole._reader('<body><p>Kept.</p><p>BOOM</p><p>After.</p></body>', _Boom)
+        self.assertIn("ValueError", p.parse_error)
+        self.assertIn("Kept.", keyhole._text_of(p))
+        res = keyhole.Result(url="https://x.dev", status=200, text=keyhole._text_of(p),
+                             markdown=keyhole._markdown_of(p), parse_error=p.parse_error)
+        self.assertIn("[partial: ValueError", keyhole.format_batch_row(1, 1, res))
+        self.assertIn("partial: ValueError", keyhole.corpus_body(res).split("\n")[0])
+        json_row = keyhole.batch_payload(res)
+        self.assertEqual(json_row["parse_error"], p.parse_error)
 
 
 class TestWallClassification(unittest.TestCase):

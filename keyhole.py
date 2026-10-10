@@ -13,6 +13,14 @@ cookie-banner soup. Keyhole does neither. It:
      narrows it to the container holding the paragraphs, and says which it used,
   5. can escalate to a real browser for JS-rendered or JS-challenge pages.
 
+Every heuristic above is best-effort, so every one of them is *named* in the
+result: which root was used (`scope=main>div.mw-content-ltr`), whether the page
+had no root at all (`scope=none`), whether a root was found and the cut kept
+nothing (`scope=empty-root`), whether chrome suppression had to be switched off
+(`parse=no-chrome`), and whether the HTML parser itself gave up part-way
+(`parse_error`). A relaxed pass that stays quiet is indistinguishable from a
+page that never needed relaxing, and only one of those is worth trusting.
+
 Stdlib only — no install step, runs anywhere Python does.
 
   ./keyhole.py fetch https://example.com
@@ -39,7 +47,7 @@ import zlib
 from dataclasses import dataclass, field, asdict
 from html.parser import HTMLParser
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 BROWSER_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -128,7 +136,9 @@ class Result:
     text: str = ""
     markdown: str = ""
     links: list = field(default_factory=list)
-    scope: str = ""      # content root the extraction was scoped to; "" = whole page
+    scope: str = ""      # the root the cut used; "" only when the page has none
+    parse: str = "strict"   # which pass produced this: strict | no-chrome
+    parse_error: str = ""   # the HTML parser raised; the page is what it got to
     bytes_in: int = 0
     wall: dict | None = None
     error: str = ""
@@ -136,6 +146,7 @@ class Result:
     @property
     def ok(self) -> bool:
         return self.status == 200 and not self.wall and not self.error
+
 
 
 def fetch(url: str, timeout: float = 25.0, headers: dict | None = None,
@@ -185,6 +196,8 @@ def fetch(url: str, timeout: float = 25.0, headers: dict | None = None,
         res.text = _text_of(page)
         res.links = _links_from(page, res.final_url or url)
         res.scope = page.scope
+        res.parse = page.rung
+        res.parse_error = page.parse_error
     else:
         res.text = body
         res.markdown = body
@@ -208,6 +221,12 @@ _CHROME_TAGS = {"nav", "footer", "aside"}
 # Where real content starts. <main> is unique per spec; <article> is not, but a
 # page whose first article comes after a language switcher wants the same cut.
 _ROOT_TAGS = {"main", "article"}
+# The name the scope carries when a root was found but the cut kept nothing, so
+# it was abandoned. Without it that case renders as `scope=none` — identical to
+# a page that has no root at all, i.e. an extraction that was *attempted and
+# failed* looking exactly like one that was never attempted.
+SCOPE_EMPTY_ROOT = "empty-root"
+
 
 # Containers the paragraph-tightening rule chooses between. Exactly the set the
 # density probe measured (tests/probe_density.py), so the rule that ships is the
@@ -270,6 +289,8 @@ class _Reader(HTMLParser):
         self.title = ""
         self.description = ""
         self.scope = ""                     # content root used, "" = whole document
+        self.rung = "strict"                # the pass that produced this reader
+        self.parse_error = ""               # set when feed()/close() raised
         self._want_scope = scope
         self._root_at: tuple[int, int, int] | None = None   # (md, txt, links) cut
         self._root_end: tuple[int, int, int] | None = None  # ... where the root closed
@@ -356,11 +377,13 @@ class _Reader(HTMLParser):
         """Keep the span from the content root to where it closed, narrowed to
         the innermost container inside it that still holds the paragraphs.
 
-        The cut is abandoned — and ``scope`` goes back to "" — when it would keep
-        nothing: a scoping that never happened must not be reported as one. The
-        tightening is abandoned first (falling back to the untouched root) so a
-        narrowing that eats the page can never be worse than the cut that
-        motivated it.
+        The cut is abandoned — and ``scope`` stops naming a root — when it would
+        keep nothing: a scoping that never happened must not be reported as one.
+        It is *not* reported as "this page has no root" either — that is a
+        different fact, and the two looked identical while both were the empty
+        string. The tightening is abandoned first (falling back to the untouched
+        root) so a narrowing that eats the page can never be worse than the cut
+        that motivated it.
         """
         if self._root_at is None:
             return
@@ -374,7 +397,7 @@ class _Reader(HTMLParser):
             span, name = (*self._root_at,
                           *(self._root_end or (len(self.md), len(self.txt), len(self.links)))), self.scope
         if not self._span_keeps_anything(span):
-            self.scope = ""
+            self.scope = SCOPE_EMPTY_ROOT   # found, tried, kept nothing
             self._root_at = None
             return
         m0, t0, l0, m1, t1, l1 = span
@@ -606,13 +629,27 @@ class _Reader(HTMLParser):
         self.txt.append(data)
 
 
+def _has_content(p: _Reader) -> bool:
+    """Does this parse hold anything a caller could actually read?
+
+    Not the same question as "are the buffers non-empty": a document whose only
+    markdown is a stray `<br>` yields ``md == ["\\n"]`` — a non-empty list and an
+    empty page. Treating that as content ends the fallback ladder one rung too
+    early and hands back nothing at all while reporting success.
+    """
+    return bool("".join(p.md).strip() or "".join(p.txt).strip() or p.links)
+
+
 def _reader(html_text: str, cls=None, scope: bool = True) -> _Reader:
     p = (cls or _Reader)(scope=scope)
     try:
         p.feed(html_text)
         p.close()
-    except Exception:
-        pass
+    except Exception as e:
+        # The page is whatever the parser reached before it gave up. That is
+        # usually still worth having — but it is a *partial* page, and a partial
+        # page that says nothing about itself is read as a short one.
+        p.parse_error = f"{type(e).__name__}: {e}"
     return p
 
 
@@ -625,22 +662,34 @@ class _NoChromeReader(_Reader):
 
 
 def _parse(html_text: str) -> _Reader:
-    """Parse strictly; on an empty result relax the heuristics, twice if needed.
+    """Parse strictly; if that yields nothing readable, relax chrome suppression.
 
     Both suppression and content scoping are best-effort. Malformed HTML (a
     sidebar opened once and never closed) or an over-eager class pattern can nest
     an entire document inside a suppressed subtree; a self-contained <main> can
     hold the wrapper and not the words. Returning an empty result for a page that
     plainly has text is a worse failure than keeping a cookie banner or a
-    language switcher, so the ladder ends with no heuristics at all.
+    language switcher — so when the strict pass comes back with nothing, the
+    document is parsed again with chrome suppression off.
+
+    That relaxed pass names itself (``parse=no-chrome``). It used to be silent,
+    and a page recovered this way was indistinguishable from a clean one — the
+    same empty-success shape this tool keeps finding in itself.
+
+    There used to be a third rung, "no heuristics at all". It was removed: the
+    relaxed pass differs from it only in scoping, and the cut is abandoned
+    whenever it would keep nothing, so a rung-2 result can never be empty *of*
+    text that rung 3 would have found. Measured over 6,000 destructive mutations
+    of six real pages (tests/probe_fallback.py --fuzz): rung 2 came up empty 400
+    times, rung 3 rescued 0 of them. A fallback that cannot fire is a comment
+    pretending to be safety.
     """
     p = _reader(html_text)
-    if p.md or p.txt or p.links:
+    if _has_content(p):
         return p
     p = _reader(html_text, _NoChromeReader)
-    if p.md or p.txt or p.links:
-        return p
-    return _reader(html_text, _NoChromeReader, scope=False)
+    p.rung = "no-chrome"
+    return p
 
 
 def analyze(html_text: str) -> _Reader:
@@ -756,6 +805,8 @@ def render(url: str, timeout: int = 40) -> Result:
     res.text = _text_of(page)
     res.links = _links_from(page, url)
     res.scope = page.scope
+    res.parse = page.rung
+    res.parse_error = page.parse_error
     if classify_wall(200, dom, {}):
         res.wall = {"kind": "post_render", "why": "the page is still gated after rendering"}
     return res
@@ -811,6 +862,22 @@ def _short(n: int) -> str:
     return str(n)
 
 
+def parse_notes(res: Result) -> str:
+    """The extraction's deviations, named; ``""`` when the strict pass ran clean.
+
+    Absence means the ordinary path and nothing else — every relaxed pass and
+    every partial parse says so here. A fallback that stays quiet cannot be told
+    apart from a page that never needed one, and only one of those is worth
+    trusting.
+    """
+    notes = []
+    if res.parse and res.parse != "strict":
+        notes.append(f"parse={res.parse}")
+    if res.parse_error:
+        notes.append(f"partial: {res.parse_error[:80]}")
+    return "".join(f" [{n}]" for n in notes)
+
+
 def format_batch_row(index: int, total: int, res: Result, scope_w: int = 12) -> str:
     """One line per URL. A wall and an error say so in the status column instead
     of being flattened into a generic failure — the whole point of the tool.
@@ -831,11 +898,12 @@ def format_batch_row(index: int, total: int, res: Result, scope_w: int = 12) -> 
     if not res.ok:
         return f"{head} HTTP {res.status:<4} {'':<22}{res.url}"
     title = (res.title or "").strip()
-    # scope=none means the page has no <main>/<article> and the whole document was
-    # kept: the honest counterpart to a scope that silently did nothing.
+    # The scope column names one of four things: the root used, `none` when the
+    # page has no root at all, `empty-root` when one was found and the cut kept
+    # nothing, and a narrowed cut as `main>div.mw-content-ltr`.
     line = (f"{head} OK   text={_short(len(res.text or '')):<7} "
             f"links={len(res.links):<4} scope={res.scope or 'none':<{scope_w}} "
-            f"{res.url}{rendered}")
+            f"{res.url}{rendered}{parse_notes(res)}")
     return line + (f"\n            — {title[:80]}" if title else "")
 
 
@@ -845,7 +913,8 @@ def batch_payload(res: Result) -> dict:
     return {"url": res.url, "ok": res.ok, "status": res.status, "method": res.method,
             "final_url": res.final_url, "title": res.title, "bytes_in": res.bytes_in,
             "text_chars": len(res.text or ""), "links": len(res.links),
-            "scope": res.scope, "wall": res.wall, "error": res.error}
+            "scope": res.scope, "parse": res.parse, "parse_error": res.parse_error,
+            "wall": res.wall, "error": res.error}
 
 
 # ---------------------------------------------------------------- corpus output
@@ -918,10 +987,17 @@ def corpus_body(res: Result) -> str:
     leave a corpus quietly missing the pages that most needed a human look — the
     silent-drop failure this tool exists to prevent. The file says ``FAILED`` and
     names the wall, so ``ls`` shows the hole instead of hiding it.
+
+    The header also carries the extraction's own deviations: a file read months
+    later knows whether it holds a clean parse, one recovered with chrome
+    suppression switched off, or a partial page the parser gave up on.
     """
     header = (f"<!-- source: {res.url}"
               + (" | rendered" if res.method == "browser" else "")
-              + f" | scope: {res.scope or 'none (whole page)'} -->")
+              + f" | scope: {res.scope or 'none (whole page)'}"
+              + (f" | parse: {res.parse}" if res.parse != "strict" else "")
+              + (f" | partial: {res.parse_error}" if res.parse_error else "")
+              + " -->")
     if res.wall or res.error or not res.ok:
         reason = (f"WALL {res.wall['kind']}: {res.wall['why']}" if res.wall
                   else f"ERROR: {res.error}" if res.error
@@ -998,7 +1074,7 @@ def _emit(res: Result, args) -> None:
         if res.description:
             print(f"desc:  {res.description[:200]}")
         print(f"bytes: {res.bytes_in}  links: {len(res.links)}  text: {len(res.text)}"
-              f"  scope: {res.scope or 'none'}  method: {res.method}")
+              f"  scope: {res.scope or 'none'}  method: {res.method}{parse_notes(res)}")
         if res.text[:200]:
             print(f"first: {res.text[:200]}")
 

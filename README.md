@@ -50,11 +50,23 @@ while reporting `200`. Two real bugs are frozen as tests in
   entire document. Structural tags are now never treated as chrome.
 - A sidebar `div` opened and never closed swallowed everything after it.
 
-**Extraction never returns nothing when the page had text.** Chrome suppression
-and content scoping are both heuristic, so both are best-effort. If the strict
-pass yields nothing at all, the parse is repeated with suppression disabled, and
-then with no heuristics at all. Keeping a cookie banner, or a language switcher,
-is a much smaller failure than returning an empty page.
+**Extraction never returns nothing when the page had text — and says when it had
+to relax.** Chrome suppression and content scoping are both heuristic, so both
+are best-effort. If the strict pass yields nothing readable, the parse is
+repeated with chrome suppression disabled; a page recovered that way reports
+`parse=no-chrome` rather than looking like a page that never needed relaxing.
+
+The ladder used to have a third rung, "no heuristics at all". It was measured
+and removed: the relaxed pass differs from it only in scoping, and the cut is
+abandoned whenever it would keep nothing, so a rung-2 result can never be empty
+*of* text a rung-3 pass would have found. Over 6,000 destructive mutations of
+six real pages (`tests/probe_fallback.py --fuzz`) rung 3 was reached 400 times
+and rescued nothing. A fallback that cannot fire is a comment pretending to be
+safety.
+
+A parser that raises part-way (rare, but the HTML parser is fed real-world
+garbage) keeps whatever it reached and reports `parse_error`; a partial page that
+said nothing about itself would be read as a short one.
 
 **Content is scoped to the page's own root, and the scope is named.** A page's
 `<main>` (or `role="main"`, or `<article>`) is where its content starts; anything
@@ -117,9 +129,15 @@ forty times — so `batch` exists and reports *counts*, not bodies.
 ```
 
 `scope=` is where the content was taken from: `main`, `article`, `div[role=main]`,
-or `none` when the page has no such root and the whole document was kept. When
-the cut was narrowed further inside the root, the narrowing is named too —
-`scope=main>div.mw-content-ltr`.
+a narrowed cut such as `main>div.mw-content-ltr`, `none` when the page has no such
+root and the whole document was kept, or `empty-root` when a root *was* found and
+the cut kept nothing so it was abandoned. The last two used to print the same
+value; an extraction that was attempted and failed must not read like one that
+was never attempted.
+
+Anything the extraction had to relax is named on the row: `[parse=no-chrome]`
+when chrome suppression had to be switched off, `[partial: <error>]` when the
+HTML parser gave up part-way. An unmarked row means the strict pass ran clean.
 
 Input is one URL per line, blank lines and `#`-comment lines skipped, duplicates
 collapsed (first occurrence wins). `#` is deliberately **not** an inline comment
@@ -181,10 +199,12 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 54 tests
+python tests/test_keyhole.py                  # offline, 61 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 python tests/probe_density.py                 # measures candidate extraction rules, live
+python tests/probe_tighten.py                 # measures the tightening rule on/off, live
+python tests/probe_fallback.py --fuzz 6000    # measures the fallback ladder, live
 ```
 
 ## Use it from an agent (MCP)
@@ -215,30 +235,34 @@ Register it with any MCP client:
 }
 ```
 
-Verified against Hermes Agent's native MCP client: connects in ~890ms, all three
+Verified against Hermes Agent's native MCP client: connects in ~890ms, all four
 tools discovered. (Despite the name, `python` here is the interpreter path your
 agent runs with — use an absolute path.)
 
 ## Status
 
-`0.5.0`. Content is scoped to the page's own root, narrowed by one measured
-nesting rule, and every result names the scope it used; 57 offline tests green
-(was 54); verified live over five sites — MDN, npm, Wikipedia, `example.com`,
-Hacker News.
+`0.6.0`. Content is scoped to the page's own root, narrowed by one measured
+nesting rule, and every result names the scope it used; 61 offline tests green
+(was 57). The extraction's fallbacks are named too: `scope=none` (no root),
+`scope=empty-root` (a root was found and the cut kept nothing), `parse=no-chrome`
+(chrome suppression had to be switched off), `parse_error` (the parser gave up
+part-way). The ladder's unreachable third rung was deleted after 6,000
+destructive mutations of six real pages reached it 400 times and rescued none
+(`tests/probe_fallback.py`).
 
-The page that motivated this was Wikipedia, and for a while it improved by only 74
-characters: its Vector 2022 skin wraps the language dropdown and the table of
-contents *inside* `<main id="content">`, so a structural root cannot reach them.
-The next step there was assumed to be density-based scoring; `tests/probe_density.py`
-measured it and split the verdict. Non-link text as the signal is **dead**: on
-Wikipedia it picks an ancestor of `<main>` (a −7 character change), and on MDN and
-npm it picks exactly today's container. Paragraph text is the signal that survived
-— but only as a *tightening* of the structural cut, never above it — and it is now
-built: Wikipedia −1,685 characters (`scope=main>div.mw-content-ltr`, no longer
-opening on sixty language names), npm −133 with the `Readme · Code · Beta` tab
-chrome gone, and MDN, `example.com` and Hacker News unchanged. Over eleven sites
-the rule never grew a page and never lost the article marker
-(`tests/probe_tighten.py`). (`deepest root wins` was likewise measured and
-dropped: npm's `<main>` has a nested `<article>`, MDN has none at all, so it would
-buy one site and not the one that prompted the work.) Next: `--out` over MCP, so an
-agent can build a corpus, not just survey one.
+The page that motivated the scoping work was Wikipedia, and for a while it
+improved by only 74 characters: its Vector 2022 skin wraps the language dropdown
+and the table of contents *inside* `<main id="content">`, so a structural root
+cannot reach them. The next step there was assumed to be density-based scoring;
+`tests/probe_density.py` measured it and split the verdict. Non-link text as the
+signal is **dead**: on Wikipedia it picks an ancestor of `<main>` (a −7 character
+change), and on MDN and npm it picks exactly today's container. Paragraph text is
+the signal that survived — but only as a *tightening* of the structural cut,
+never above it — and it is built: Wikipedia −1,685 characters
+(`scope=main>div.mw-content-ltr`, no longer opening on sixty language names), npm
+−133 with the `Readme · Code · Beta` tab chrome gone, and MDN, `example.com` and
+Hacker News unchanged. Over eleven sites the rule never grew a page and never
+lost the article marker (`tests/probe_tighten.py`). (`deepest root wins` was
+likewise measured and dropped: npm's `<main>` has a nested `<article>`, MDN has
+none at all, so it would buy one site and not the one that prompted the work.)
+Next: `--out` over MCP, so an agent can build a corpus, not just survey one.

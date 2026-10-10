@@ -145,6 +145,7 @@ def tool_fetch_page(args: dict) -> dict:
             "url": res.url, "final_url": res.final_url, "status": res.status,
             "method": res.method, "title": res.title, "description": res.description,
             "links": res.links[:40], "text_length": len(res.text or ""),
+            "scope": res.scope, "parse": res.parse, "parse_error": res.parse_error,
             "wall": res.wall, "error": res.error,
             "markdown": _truncate(res.markdown or "", max_chars),
         }
@@ -156,6 +157,10 @@ def tool_fetch_page(args: dict) -> dict:
         header.append("(rendered with headless Chrome)")
     if res.wall:
         header.append(f"(note: {res.wall['kind']} present, content recovered)")
+    note = keyhole.parse_notes(res).strip()
+    if note:
+        # A relaxed pass or a partial page must not read like a clean one.
+        header.append(note)
     return _text("\n".join(x for x in header if x) + "\n\n" + _truncate(body or "", max_chars))
 
 
@@ -221,6 +226,13 @@ def tool_fetch_many(args: dict) -> dict:
     walled = sum(1 for r in results if r.wall)
     lines.append("")
     lines.append(f"{ok}/{len(results)} ok" + (f", {walled} walled" if walled else ""))
+    # The count is not the report: a survey that says "1/2 ok" without naming the
+    # one that died makes the caller re-read the rows to find out. Name them.
+    down = [r for r in results if not r.ok]
+    if down and ok:
+        named = ", ".join(f"{r.url}{' [WALL]' if r.wall else ''}" for r in down[:5])
+        more = f" (+{len(down) - 5} more)" if len(down) > 5 else ""
+        lines.append(f"not ok ({len(down)}): {named}{more}")
     if walled and not do_render:
         lines.append("hint: render=true to escalate the walled ones.")
     if ok:
