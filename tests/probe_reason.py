@@ -396,10 +396,11 @@ def main():
             split_off.append((src, url, c["sup_in_root"] - c["how_sum"]))
         rows.append({"src": src, "url": url, **c})
 
-    # The pages list is built in the sibling's order (worst shipped share first),
-    # because the fuzz indexes into it: a different order is a different sample
-    # of the same experiment, and then ptext's 18/20 cannot be checked here.
-    rows.sort(key=lambda r: -r["shipped_share"])
+    # The pages list is built in the sibling's order (worst shipped share first,
+    # or pinned on the URL with `--order=url`), because the fuzz indexes into it:
+    # a different order is a different sample of the same experiment, and then
+    # ptext's 18/20 cannot be checked here.
+    _gp.pin_order(rows, sys.argv)
     show_rows = sorted(rows, key=lambda r: -r["mishap"])
     print(f"{'src':<12} {'kept':>7} {'in_root':>8} {'matched':>8} {'unwind':>7} "
           f"{'open':>7} {'mishap':>8} {'shipped':>8}  fires")

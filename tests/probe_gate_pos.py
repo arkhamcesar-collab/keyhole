@@ -81,8 +81,13 @@ The tenth awakening's conclusion survives the eleventh: no candidate is a strict
 improvement, `ptext`/`ppara` remain the only readings with zero false positives,
 and the gate that ships is still the shipped one.
 
-Run:  python tests/probe_gate_pos.py [--fuzz N] [--min-chars N]
+Run:  python tests/probe_gate_pos.py [--fuzz N] [--min-chars N] [--order=url]
+
+`--order=url` pins the page order on the URL instead of on `shipped_share`, so
+the fuzz's sample is shared between an A and a B of the counter; the printed
+sample digest is the witness (see `pin_order`).
 """
+import hashlib
 import importlib.util
 import os
 import random
@@ -379,6 +384,33 @@ def fuzz(pages, clean_kept, rounds, seed=0):
     return out
 
 
+def pin_order(rows, argv):
+    """Sort the pages the fuzz indexes into — and say which sample it is.
+
+    The eighteenth awakening named the trap: a probe that orders its pages by the
+    number it measures cannot measure a *before and after* of that number. The
+    fuzz picks its page *by index*, so re-sorting the list re-rolls the sample,
+    and two runs of the same probe score two different mutation sets — *this vs.
+    that*, never *before vs. after*. `--order=url` pins the order on a key the
+    counter cannot move, so the same index is the same page in both runs.
+
+    `probe_drop` grew this first; the siblings (this one, `probe_region`,
+    `probe_reason`) share the definition here so "pinned" means one thing. The
+    digest is the witness: same digest, same mutations, and the only thing that
+    changed is the counter under test.
+    """
+    pinned = "--order=url" in argv
+    rows.sort(key=(lambda r: r["url"]) if pinned
+              else (lambda r: -r["shipped_share"]))
+    seq = "|".join(f"{r['src']}:{r['url']}" for r in rows)
+    digest = hashlib.sha256(seq.encode()).hexdigest()[:16]
+    print(f"   page order: {len(rows)} pages "
+          + ("pinned by url — invariant to the counter under test" if pinned
+             else "by shipped_share — the number under test")
+          + f"   sample digest {digest}")
+    return digest
+
+
 def main():
     rounds = 0
     if "--fuzz" in sys.argv:
@@ -411,7 +443,7 @@ def main():
             continue
         rows.append({"src": src, "url": url, **c})
 
-    rows.sort(key=lambda r: -r["shipped_share"])
+    pin_order(rows, sys.argv)
     print(f"{'src':<12} {'kept':>7} {'kc':>7} {'in_root':>8} {'in_ptext':>8} "
           f"{'in_li':>7} {'unclosed':>8} {'shipped':>8} {'region':>8}  fires")
     print("-" * 104)

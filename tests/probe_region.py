@@ -480,9 +480,11 @@ def main():
             continue
         rows.append({"src": src, "url": url, **c})
 
-    # Same order the siblings fuzz in — the fuzz indexes into this list, so a
-    # different order is a different sample of the same experiment.
-    rows.sort(key=lambda r: -r["shipped_share"])
+    # Same order the siblings fuzz in, by the sibling's own definition of
+    # "pinned": the fuzz indexes into this list, so a different order is a
+    # different sample of the same experiment. `--order=url` shares the sample
+    # with an A/B of the counter; the digest says which sample this is.
+    _gp.pin_order(rows, sys.argv)
     print(f"{'src':<12} {'kept':>7} {'in_root':>8} {'in_reg':>7} {'out_reg':>8} "
           f"{'ptext':>7} {'mishap':>7} {'drop':>7} {'desync':>7}  fires  scope")
     print("-" * 126)
