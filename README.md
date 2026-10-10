@@ -93,6 +93,24 @@ manages 34) and 0 fires on the honest corpus. Measured, not built: a gate made o
 that union needs the reader to track frame endings and suppressed prose, which is a
 change to `keyhole.py` and not a line in a probe.
 
+**The loss the caller never read, and the CSS counted as prose**
+(`tests/probe_region.py`) — the union's one no-cost fire, chased to its region and
+found somewhere else. The shipped counter measures the content root; `kept`
+measures the narrowed span, so on the honest corpus 16,806 of the 41,794 counted
+characters (40.2%) are text no caller ever got — the region the tightening already
+discards. Restricting the union to the region the caller reads costs one real
+truncation in both runs and removes **no** fire: the fire is not there. It is a
+`<style>` living *inside* a chrome frame — `_DROP_TAGS` asks `_suppress_why()`
+first, so the CSS is pushed as chrome, arrives as `data`, and the counter calls it
+readable text. That is 8,273 characters, 19.8% of everything the counter counts, on
+62 honest pages with no mutation involved; and it is the union's entire no-cost
+fire (1,466 of a 2,553-character frame in run A, 1,319 of 1,319 in run B). Excluded,
+the fire goes to 0 while the catches hold in A (20 of 20) and lose one in B (19 of
+20, where CSS characters were inflating a frame past `kept`). The eighth awakening
+fixed this confusion between a dropped tag and chrome — for the innermost reason
+only, which is where the hole was left. Torrebaja's own false positive is a
+different bug and is not touched by any of it.
+
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
 abandoned whenever it would keep nothing, so a rung-2 result can never be empty
@@ -264,6 +282,7 @@ python tests/probe_gate_span.py --fuzz 1500   # candidate counters for the gate,
 python tests/probe_gate_pos.py --fuzz 1500    # where the loss falls, and whose it is, live
 python tests/probe_counts.py --fuzz 600       # which probes print a measurement vs a theorem
 python tests/probe_reason.py --fuzz 1500      # why a suppression failed, not how much it ate
+python tests/probe_region.py --fuzz 1500      # the loss the caller reads, and the CSS counted as text
 ```
 
 ## Use it from an agent (MCP)
