@@ -103,11 +103,36 @@ this run's pages are that sample or the run says it is another one. The census i
 order-invariant, so ``--order=url`` changes the digest's meaning and not the
 numbers.
 
-Named rather than implied: the *other* half of the price, the fuzz, is not run
-here (the twenty-eighth awakening's open item 2). This probe is the honest side
-only. What it can decide is whether the 12% has the ninth's shape; what a
-prose-gated replacement would stop catching is a question about mutations and is
-not answered by a census of pages nothing happened to.
+Named rather than implied: the *other* half of the price, the fuzz, was not run
+here (the twenty-eighth awakening's open item 2). The thirtieth awakening ran it
+— see below — and this paragraph stays as the statement of what was missing.
+
+Thirtieth awakening: the census read from the other side. The 12% *is* the
+ninth's shape, and the closing line above — the fires and the damage are disjoint
+in the frame ledger — was measured on **one side only**: 208,626 characters and
+not one `unwind`, not one `open`, on pages nothing had happened to. The shape the
+gate exists to catch is a claim about mutations, and a census of untouched pages
+cannot witness it. So the fuzz runs here, on the *same* sample and through the
+sibling's own `fuzz()` (the sample digest above is the witness that it is the
+same 353 pages), and the sibling now carries the same ledger on the damaged side:
+the mutated page's frames by `how`, the *clean* page's frames for the same page,
+and the difference as arithmetic on two printed numbers rather than an
+attribution.
+
+**Measured:** the honest census is **208,626 characters, `matched` 208,626,
+`unwind` 0, `open` 0**; the damaged pages of the same sample carry **46,184
+characters in chrome frames, of which 5,216 are the clean pages' own — so the
+mutations added 40,968, and 30,562 of them (74.6%) came from a frame that ended
+`unwind` against 10,406 (25.4%) from one that ended `matched`. `open` is 0 on
+both sides.** The criterion "the frame that does not close" is bilateral at last,
+and its third value is the one absent from both: nothing measured in this project
+has been eaten by a frame still open when the document ends.
+
+Also fixed here, because the sibling's fuzz printed it as "(chars)" while
+counting cases: `real_kinds` adds 1 per real truncation that ate a kind, and only
+`real_kind_chars` is a character total. The count did not move; the label did.
+It is the twenty-ninth awakening's own small sin — a count wearing another
+count's label — one file over.
 """
 import importlib.util
 import os
@@ -195,10 +220,14 @@ def main():
     if "--list" in sys.argv:
         path = sys.argv[sys.argv.index("--list") + 1]
     else:
-        args = [a for a in sys.argv[1:] if not a.startswith("--")]
+        args = [a for a in sys.argv[1:] if not a.startswith("--") and not a.isdigit()]
         if args:
             path = args[0]
     extended = "--extended" in sys.argv
+    rounds = 0
+    if "--fuzz" in sys.argv:
+        fi = sys.argv.index("--fuzz")
+        rounds = int(sys.argv[fi + 1]) if len(sys.argv) > fi + 1 else 1500
 
     urls = _pg.read_list(path)
     print(f"keyhole {keyhole.__version__} — what the gate's fires are made of\n"
@@ -339,6 +368,83 @@ def main():
         print(f"   {k.replace('_fires', ''):<8} {len(n):>3} of {len(rows)}"
               + ("" if not n else "   " + ", ".join(
                   f"{r['src']} {r['shipped_share'] * 100:.0f}%" for r in n[:4])))
+
+    # -- the other half of the price: the same sample, mutated ----------------
+    # Everything above is the honest side, and the twenty-ninth awakening closed
+    # on a claim that was measured on one side only: the honest fires and the
+    # damage are disjoint sets in the frame ledger — 208,626 characters removed
+    # and every one of them by a frame that closed with its own end tag, not one
+    # `unwind`, not one `open`. The damage is not in this file: it is mutations,
+    # and the shape the gate exists to catch (the suppression that never closed
+    # and ate the article's tail) is a statement about them. So the fuzz runs
+    # here, on the *same* sample and through the sibling's own `fuzz()` — the
+    # probe that names must not move the measurement, and the sample digest above
+    # is the witness that this is the 353 pages and not another set.
+    if rounds:
+        pages, clean_kept = [], []
+        for r in rows:
+            try:
+                html = _pg.cached_download(r["url"])
+            except Exception:
+                continue
+            pages.append((html, r["src"], r["url"]))
+            clean_kept.append(_gpos.candidates(html)["kept"])
+        f = _gpos.fuzz(pages, clean_kept, rounds)
+        print(f"\n== fuzz {rounds} mutations on the same {len(rows)}-page sample")
+        print(f"   mutations scored {f['n']}   real truncations {f['real']}"
+              f"   of those silent (parse=strict) {f['silent']}")
+        print(f"   {'':<8} {'caught':>7} {'missed':>7} {'silent':>8} "
+              f"{'no-cost':>8} {'partial':>8}")
+        for k in _gpos.CANDIDATES:
+            print(f"   {k:<8} {f[k]['caught']:>7} {f[k]['missed_real']:>7} "
+                  f"{f[k]['silent_caught']:>3}/{f['silent']:<4} "
+                  f"{f[k]['zero_cost']:>8} {f[k]['partial']:>8}")
+
+        # -- the damage's own ledger, the mirror of the census above ----------
+        # Two ledgers are printed for the same pages and neither is subtracted
+        # from the other: a Wikipedia page's navbox frame is in the clean ledger
+        # *and* in the damaged one, and calling it damage would be attributing a
+        # cause without measuring it (the twenty-second awakening's sin). What
+        # the subtraction is allowed to be is arithmetic on two printed numbers.
+        tot_mut = sum(f["real_how"].values())
+        tot_clean = sum(f["clean_how"].values())
+        print(f"\n== the damage's frame ledger: the mirror of this file's census")
+        print(f"   honest fires (above):  {tot_in:,} chars   by how: "
+              f"{_gpos._fmt_kinds(how)}   <-- every frame closed with its own tag")
+        print(f"   the damaged pages:     {tot_mut:,} chars in chrome frames   "
+              f"by how: {_gpos._fmt_kinds(f['real_how'])}")
+        print(f"   the same pages clean:  {tot_clean:,} chars   by how: "
+              f"{_gpos._fmt_kinds(f['clean_how'])}")
+        delta = {k: v - f["clean_how"].get(k, 0) for k, v in f["real_how"].items()}
+        for k in f["clean_how"]:
+            if k not in f["real_how"]:
+                delta[k] = -f["clean_how"][k]
+        print(f"   the difference (damaged − clean), which is what the mutations "
+              f"added:  {_gpos._fmt_kinds({k: v for k, v in delta.items() if v})}")
+        print(f"   of those real truncations, what was eaten, by kind — cases "
+              f"(not chars): {_gpos._fmt_kinds(f['real_kinds'])}")
+        print(f"     {'':<34}chars: {_gpos._fmt_kinds(f['real_kind_chars'])}")
+        # The residual, named and not folded: the two totals above are two
+        # readings of the same removed text and they do not have to agree — the
+        # difference is text inside the root that suppression removed while no
+        # frame was open, which is the fourteenth awakening's case (a suppression
+        # opened *outside* the root whose text falls inside: 55 characters on one
+        # HN page) at this sample's size. A probe that names may not average it.
+        kinds_chars = sum(f["real_kind_chars"].values())
+        print(f"     {'':<34}attributed to a frame: {tot_mut:,} of {kinds_chars:,} "
+              f"removed chars — residual {kinds_chars - tot_mut:,} "
+              f"({_pct(kinds_chars - tot_mut, kinds_chars)}) with no open frame")
+        print(f"\n   named: the frame that ate the most, per real truncation")
+        for t in f["real_top"]:
+            print(f"     {t['page']:<12} clean {t['clean']:,} kept {t['kept']:,} "
+                  f"(lost {t['lost']:,})  top frame {t['chars']:,} '{t['label']}' "
+                  f"ended {t['how']}")
+            print(f"        {_gpos._fmt_kinds(t['kinds'])}   "
+                  f"clean page's own top frame: {t['clean_top']} "
+                  f"{t['clean_top_chars']:,} chars, in_root "
+                  f"{t['in_root']:,} vs clean {t['clean_in_root']:,}  "
+                  f"rung {t['rung']}")
+            print(f"        {t['url']}")
 
     print(f"\n== left out ({len(skipped)}) — named, not folded into a total")
     for src, url, why in skipped:

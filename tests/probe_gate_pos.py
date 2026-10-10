@@ -152,6 +152,23 @@ def _fmt_kinds(kinds) -> str:
                     sorted(kinds.items(), key=lambda kv: -kv[1]) if v)
 
 
+def _by_how(frames) -> dict:
+    """A frame ledger — ``matched`` / ``unwind`` / ``open`` — summed by chars.
+
+    The twenty-ninth awakening read this census on the *honest* side (the pages
+    the gate relaxes on with nothing done to them): 208,626 characters, every one
+    of them removed by a frame that closed with its own end tag, ``unwind`` 0 and
+    ``open`` 0. That is half a statement, because the shape this gate exists to
+    catch — the suppression that never closed and ate the article's tail — is a
+    claim about *mutations*, and mutations are not in a census of pages nothing
+    happened to. This function is the same ledger, moved to the other side.
+    """
+    out: dict = {}
+    for f in frames:
+        out[f["how"]] = out.get(f["how"], 0) + f["chars"]
+    return out
+
+
 class _PosReader(_Reader):
     """Attribute chrome suppression inside the root to *where* it came from.
 
@@ -369,7 +386,16 @@ def fuzz(pages, clean_kept, rounds, seed=0):
     out = {k: {"caught": 0, "missed_real": 0, "silent_caught": 0,
                "zero_cost": 0, "partial": 0, "examples": []} for k in CANDIDATES}
     out.update({"real": 0, "silent": 0, "caught_now": 0, "n": 0,
-                "real_kinds": {}, "blind": 0, "blind_named": []})
+                "real_kinds": {}, "real_kind_chars": {}, "blind": 0,
+                "blind_named": [],
+                # the damage's own frame ledger, the mirror of the honest census:
+                # what the mutated page ate, split by how each frame ended, and
+                # the same total on the *clean* page it was cut from — because a
+                # Wikipedia page's navbox frame is in both ledgers and a
+                # subtraction has to be a measurement, not a subtraction.
+                "real_how": {}, "clean_how": {}, "real_top": []})
+    clean_c: dict = {}
+    clean_counted: set = set()
     for _ in range(rounds):
         i = rnd.randrange(len(pages))
         src, label, url = pages[i]
@@ -403,7 +429,55 @@ def fuzz(pages, clean_kept, rounds, seed=0):
         if real:
             out["real"] += 1
             for k, v in c["sup_kind"].items():
+                # Two counters, because the line this feeds said "(chars)" while
+                # counting cases: `real_kinds` adds 1 per real truncation that ate
+                # this kind, and it has been printed as a character total since
+                # the tenth awakening. The count stays where it is (it is what
+                # earlier runs printed and a probe that names must not move the
+                # measurement); the label gets fixed and the chars get a counter
+                # of their own, so the two readings are two.
                 out["real_kinds"][k] = out["real_kinds"].get(k, 0) + 1
+                out["real_kind_chars"][k] = out["real_kind_chars"].get(k, 0) + v
+            # The other half of the twenty-ninth awakening's census, on the side
+            # where the damage lives. `src` is the clean page the mutation was cut
+            # from, so both ledgers are printed for the *same* page: a Wikipedia
+            # navbox frame is in the clean ledger and is still there in the damaged
+            # one, and attributing it to the mutation would be the twenty-second
+            # awakening's sin — a subtraction claimed instead of shown.
+            if i not in clean_c:
+                try:
+                    clean_c[i] = candidates(src)
+                except Exception:
+                    clean_c[i] = None
+            c_clean = clean_c[i] or {}
+            how_m = _by_how(c["frames"])
+            how_ck = _by_how(c_clean.get("frames") or [])
+            for kk, vv in how_m.items():
+                out["real_how"][kk] = out["real_how"].get(kk, 0) + vv
+            # The clean ledger is a fact *about a page*, so it enters the total
+            # once per page and not once per mutation: a page hit three times in
+            # 1,500 rounds would otherwise be counted three times and the
+            # comparison with the mutated total would be against a number with a
+            # different definition — a total that means something else is the
+            # twenty-eighth awakening's sin.
+            if i not in clean_counted:
+                clean_counted.add(i)
+                for kk, vv in how_ck.items():
+                    out["clean_how"][kk] = out["clean_how"].get(kk, 0) + vv
+            top = max(c["frames"], key=lambda fr: fr["chars"], default=None)
+            ctop = max(c_clean.get("frames") or [], key=lambda fr: fr["chars"],
+                       default=None)
+            if top is not None and len(out["real_top"]) < 10:
+                out["real_top"].append({
+                    "page": label, "url": url, "clean": clean, "kept": c["kept"],
+                    "lost": lost, "label": top["label"], "how": top["how"],
+                    "chars": top["chars"], "kinds": dict(top["kinds"]),
+                    "in_root": c["sup_in_root"],
+                    "clean_in_root": c_clean.get("sup_in_root", 0),
+                    "clean_top": (ctop or {}).get("how", "-"),
+                    "clean_top_chars": (ctop or {}).get("chars", 0),
+                    "scope": c["scope"], "rung": c["rung"],
+                })
             if silent:
                 out["silent"] += 1
             else:
@@ -613,7 +687,14 @@ def main():
         print(f"   the mutation really ate the article:  {f['real']}"
               f"   (strict kept > {keyhole.EMPTY_TEXT} chars and lost > half of")
         print(f"     {'':<34}the page's own clean extraction)")
-        print(f"     of those, what was eaten, by kind (chars): {_fmt_kinds(f['real_kinds'])}")
+        print(f"     {'':<34}how many of them ate each kind (cases, not chars):"
+              f" {_fmt_kinds(f['real_kinds'])}")
+        print(f"     {'':<34}how much of each kind (chars):"
+              f"  {_fmt_kinds(f['real_kind_chars'])}")
+        print(f"     of those, the damaged pages' whole frame ledger, by how:"
+              f"  {_fmt_kinds(f['real_how'])}")
+        print(f"     the same pages, clean, their own frames by how:"
+              f"  {_fmt_kinds(f['clean_how'])}")
         print(f"   of those, the ladder caught it:       {f['caught_now']}")
         print(f"   of those, SILENT (parse=strict):      {f['silent']}   <-- what the gate")
         print(f"     {'':<34}exists to catch")

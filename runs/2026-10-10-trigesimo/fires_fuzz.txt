@@ -1,0 +1,155 @@
+keyhole 0.7.0 — what the gate's fires are made of
+corpus: C:\Users\cesar\Projects\keyhole\tests\corpus\band_urls.txt  (363 urls)   floor 200   --extended (only the floor excludes)
+
+   page order: 353 pages by shipped_share — the number under test   sample digest e8d5df572463cd5c
+
+== the fires: 43 of 353 honest pages the shipped gate relaxes on
+   wikirandom   kept     710  in_root   5,835   89.2%   links  83.6%   para +     0   li:5561 other:167 td:107
+   wikirandom   kept   3,145  in_root  12,761   80.2%   links  66.0%   para +     0   li:12121 td:473 other:167
+   wikirandom   kept   2,528  in_root   9,732   79.4%   links  70.0%   para +     0   li:8369 td:1194 other:169
+   wikirandom   kept   2,440  in_root   9,097   78.9%   links  67.8%   para +     0   li:8515 td:416 other:166
+   wikirandom   kept   1,514  in_root   5,128   77.2%   links  85.7%   para +     0   li:4241 td:721 other:166
+   wikirandom   kept   3,234  in_root  10,615   76.6%   links  88.6%   para +    74   li:9168 td:1204 other:169 p:74
+   wikirandom   kept  14,364  in_root  46,618   76.4%   links  91.5%   para +     4   li:41508 td:4939 other:167 p:4
+   wikirandom   kept     538  in_root   1,494   73.5%   links  63.3%   para +     0   li:1114 td:214 other:166
+   wikirandom   kept   1,796  in_root   4,585   71.9%   links  85.5%   para +     0   li:3957 td:459 other:169
+   wikirandom   kept   5,810  in_root  13,790   70.4%   links  88.1%   para +     0   li:12970 td:653 other:167
+   wikirandom   kept     825  in_root   1,932   70.1%   links  84.0%   para +     0   li:1572 td:191 other:169
+   wikirandom   kept   3,897  in_root   9,121   70.1%   links  88.1%   para +     0   li:8195 td:757 other:169
+   wikirandom   kept   2,711  in_root   6,133   69.3%   links  97.0%   para +     0   li:5487 td:479 other:167
+   wikirandom   kept   1,464  in_root   3,137   68.2%   links  94.1%   para +     0   li:2611 td:359 other:167
+   wikirandom   kept   1,508  in_root   3,050   66.9%   links  89.3%   para +     0   li:2736 other:168 td:146
+   wikirandom   kept   5,590  in_root   9,110   62.0%   links  82.1%   para +     0   li:5930 td:3012 other:168
+   wikirandom   kept     336  in_root     543   61.8%   links  64.1%   para +     0   li:351 other:167 td:25
+   wikirandom   kept   1,267  in_root   1,980   61.0%   links  84.2%   para +     0   li:1650 other:169 td:161
+   wikirandom   kept   1,358  in_root   2,061   60.3%   links  91.8%   para +     0   li:1827 other:169 td:65
+   wikirandom   kept   1,358  in_root   2,005   59.6%   links  70.2%   para +     0   li:1807 other:166 td:32
+   wikirandom   kept     675  in_root     962   58.8%   links  64.0%   para +     0   li:526 td:269 other:167
+   wikirandom   kept   1,903  in_root   2,705   58.7%   links  86.1%   para +     0   li:2314 td:222 other:169
+   wikirandom   kept     873  in_root   1,236   58.6%   links  81.3%   para +     0   li:1037 other:167 td:32
+   wikirandom   kept   2,825  in_root   3,921   58.1%   links  89.4%   para +     0   li:3362 td:392 other:167
+   wikirandom   kept   2,892  in_root   4,008   58.1%   links  95.6%   para +     0   li:3713 other:167 td:128
+   wikirandom   kept     282  in_root     390   58.0%   links  56.7%   para +     0   li:221 other:169
+   wikirandom   kept   2,860  in_root   3,896   57.7%   links  75.6%   para +     0   li:3542 td:187 other:167
+   wikirandom   kept   1,006  in_root   1,333   57.0%   links  75.1%   para +     0   li:986 td:180 other:167
+   wikirandom   kept   1,408  in_root   1,831   56.5%   links  74.4%   para +     0   li:1619 other:168 td:44
+   wikirandom   kept   4,090  in_root   5,234   56.1%   links  87.8%   para +     0   li:4742 td:323 other:169
+   wikirandom   kept   7,255  in_root   9,187   55.9%   links  63.2%   para +     0   li:8752 td:266 other:169
+   wikirandom   kept   1,841  in_root   2,276   55.3%   links  71.4%   para +     0   li:2008 other:169 td:99
+   wikirandom   kept     297  in_root     362   54.9%   links  61.0%   para +     0   li:221 other:141
+   wikirandom   kept   2,146  in_root   2,563   54.4%   links  83.3%   para +     0   li:2203 td:194 other:166
+   wikirandom   kept   1,182  in_root   1,397   54.2%   links  87.7%   para +     0   li:1191 other:168 td:38
+   wikirandom   kept     308  in_root     360   53.9%   links  61.4%   para +     0   li:221 other:139
+   wikirandom   kept     335  in_root     391   53.9%   links  57.3%   para +     0   li:224 other:167
+   wikirandom   kept     666  in_root     769   53.6%   links  70.0%   para +     0   li:565 other:167 td:37
+   wikirandom   kept     315  in_root     359   53.3%   links  61.6%   para +     0   li:221 other:138
+   wikirandom   kept   3,032  in_root   3,371   52.6%   links  69.0%   para +     0   li:2952 td:250 other:169
+   wikirandom   kept   1,191  in_root   1,253   51.3%   links  64.7%   para +     0   li:997 other:167 td:89
+   wikirandom   kept   1,292  in_root   1,343   51.0%   links  68.2%   para +     0   li:1065 other:168 td:110
+   wikirandom   kept     742  in_root     752   50.3%   links  68.0%   para +     0   li:547 other:167 td:38
+
+== the census over the fires: what those 43 relaxations ate
+   eaten from the root: 208,626 chars across 43 pages
+   by kind:  li:182919 td:18505 other:7124 p:78
+   of that, link labels: 172,028 (82.5%)   <-- chrome is link-dense; prose is not
+   by how the frame that ate it ended:  matched:208626   <-- the tail-eating frame is the one that never matched
+   top frames by chars:
+       46,076  div#mwAh4                          on 1 page(s)
+       12,346  nav.vector-page-tools-landmark     on 43 page(s)
+       10,683  div#mwcA                           on 1 page(s)
+        8,240  table.sidebar                      on 2 page(s)
+        7,758  div#mwiQ                           on 1 page(s)
+        6,655  div#mwdg                           on 1 page(s)
+
+   fires that ate no prose (kind census, sup_ptext 0): 41 of 43
+   fires with no paragraph loss at all (page-wide delta 0): 41 of 43
+   fires where the two readings agree there was no prose loss: 41 of 43
+   fires where they disagree: 0
+
+     wikirandom      74 prose chars — the frames that held them:
+         5,484  table.sidebar                ended matched  li:4644 td:766 p:74
+         4,741  div#mwAYM                    ended matched  li:4303 td:438
+           282  nav.vector-page-tools-landmark ended matched  li:190 other:92
+       https://en.wikipedia.org/wiki/1864_New_York_gubernatorial_election
+
+     wikirandom       4 prose chars — the frames that held them:
+        46,076  div#mwAh4                    ended matched  li:41192 td:4880 p:4
+           299  nav.vector-page-tools-landmark ended matched  li:207 other:92
+           137  div#mwAiA                    ended matched  li:78 td:59
+       https://en.wikipedia.org/wiki/Volker_Kauder
+
+   -> 2 fire(s) are not the ninth's shape and are the subject of
+      the next measurement, not of this census.
+
+== the census covers the gate's numerator: 353 pages, 0 disagreement(s)
+
+== the same sample, every reading's own fires
+   shipped   43 of 353   wikirandom 89%, wikirandom 80%, wikirandom 79%, wikirandom 79%
+   span      26 of 353   wikirandom 80%, wikirandom 79%, wikirandom 79%, wikirandom 77%
+   ppara      0 of 353
+   punion     0 of 353
+   plist     31 of 353   wikirandom 89%, wikirandom 80%, wikirandom 79%, wikirandom 79%
+   ptext      0 of 353
+   open       0 of 353
+
+== fuzz 1500 mutations on the same 353-page sample
+   mutations scored 1500   real truncations 12   of those silent (parse=strict) 0
+             caught  missed   silent  no-cost  partial
+   shipped       10       2   0/0         174       40
+   span          12       0   0/0          96       31
+   ptext          7       5   0/0           0       14
+   open           6       6   0/0           0       11
+   ppara          7       5   0/0           0       16
+   plist          7       5   0/0         116       31
+   punion         7       5   0/0           0       14
+
+== the damage's frame ledger: the mirror of this file's census
+   honest fires (above):  208,626 chars   by how: matched:208626   <-- every frame closed with its own tag
+   the damaged pages:     46,184 chars in chrome frames   by how: unwind:30562 matched:15622
+   the same pages clean:  5,216 chars   by how: matched:5216
+   the difference (damaged − clean), which is what the mutations added:  unwind:30562 matched:10406
+   of those real truncations, what was eaten, by kind — cases (not chars): other:10 p:9 li:8 td:8 pre:1
+                                       chars: p:34915 li:8370 pre:6713 td:5018 other:4382
+
+   named: the frame that ate the most, per real truncation
+     lobsters     clean 9,744 kept 2,168 (lost 7,576)  top frame 7,862 'div' ended unwind
+        p:7846 other:16   clean page's own top frame: - 0 chars, in_root 7,862 vs clean 0  rung trunc-root:78%
+        https://sebsite.pw/w/20261009-strtod.html
+     hn           clean 710 kept 322 (lost 388)  top frame 414 'nav' ended unwind
+        other:414   clean page's own top frame: matched 11 chars, in_root 425 vs clean 11  rung trunc-root:57%
+        https://openscad.org/
+     wikirandom   clean 4,859 kept 646 (lost 4,213)  top frame 4,739 'div' ended matched
+        p:2447 li:1337 td:634 other:321   clean page's own top frame: matched 282 chars, in_root 5,126 vs clean 387  rung trunc-root:89%
+        https://en.wikipedia.org/wiki/Kakkayur
+     wikirandom   clean 2,308 kept 894 (lost 1,414)  top frame 721 'div' ended unwind
+        td:517 p:173 other:28 li:3   clean page's own top frame: matched 577 chars, in_root 1,705 vs clean 987  rung trunc-root:66%
+        https://en.wikipedia.org/wiki/Easingwold_railway_station
+     wikirandom   clean 13,582 kept 993 (lost 12,589)  top frame 1,008 'div' ended unwind
+        td:498 p:292 other:218   clean page's own top frame: matched 282 chars, in_root 1,396 vs clean 388  rung trunc-root:58%
+        https://en.wikipedia.org/wiki/Spaghetti_junction
+     wikirandom   clean 3,646 kept 567 (lost 3,079)  top frame 3,594 'nav' ended unwind
+        p:1996 td:739 li:536 other:323   clean page's own top frame: matched 282 chars, in_root 3,982 vs clean 423  rung trunc-root:88%
+        https://en.wikipedia.org/wiki/Francis_Joseph_Green
+     wikirandom   clean 6,235 kept 652 (lost 5,583)  top frame 7,921 'div.mw-content-ltr' ended matched
+        li:3539 p:3024 td:827 other:531   clean page's own top frame: matched 1,214 chars, in_root 8,337 vs clean 2,345  rung trunc-root:93%
+        https://en.wikipedia.org/wiki/Rail_transport_in_the_Czech_Republic
+     wikirandom   clean 2,410 kept 685 (lost 1,725)  top frame 2,386 'aside' ended unwind
+        p:1016 li:562 td:478 other:330   clean page's own top frame: matched 282 chars, in_root 2,774 vs clean 404  rung trunc-root:80%
+        https://en.wikipedia.org/wiki/Nia_Daniati
+     lobsters     clean 12,996 kept 300 (lost 12,696)  top frame 14,577 'div' ended unwind
+        pre:6713 p:5607 td:1124 other:885 li:248   clean page's own top frame: matched 81 chars, in_root 14,577 vs clean 271  rung trunc-root:98%
+        https://github.com/rupert648/culpert
+
+== left out (10) — named, not folded into a total
+   wikirandom   no region (67 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/Helen_Portugal
+   wikirandom   no region (134 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/M%C3%BCnster_%28disambiguation%29
+   wikirandom   no region (134 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/La_Lanterne
+   wikirandom   no region (195 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/Wesa
+   hn           no region (0 kept, scope empty-root)     https://minesweeper.mikelacher.com/
+   hn           no region (0 kept, scope empty-root)     https://beaksec.github.io/posts/telegram-desktop-one-click-account-takeover/
+   hn           no region (0 kept, scope empty-root)     https://community.bitwarden.com/t/published-version-update-in-app-stores/102750
+   hn           HTTPError                                https://phys.org/news/2026-10-chernobyl-particles-reveal-unexpectedly-stable.html
+   hn           not html                                 https://chronicles.popvax.com/p/popvax-goes-clinical
+   lobsters     not html                                 https://www.youtube.com/watch?v=4gcSlBORoTI
+
+   sample digest e8d5df572463cd5c
