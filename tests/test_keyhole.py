@@ -417,6 +417,45 @@ class TestTruncationGate(unittest.TestCase):
         self.assertEqual(p.rung, "no-chrome")
         self.assertIn("ONLY_TEXT_ON_PAGE", keyhole._text_of(p))
 
+    def test_a_tag_dropped_inside_chrome_is_dropped_not_charged_to_chrome(self):
+        """The witness for the hole `probe_drop` measured: `_DROP_TAGS` used to be
+        asked only when nothing else was already suppressing, so a `<style>`
+        nested inside a chrome frame inherited `chrome` as its reason and its CSS
+        arrived as `data` — read as words a reader would have seen. On the honest
+        corpus that is 8,273 characters, 19.8% of everything the counter counts.
+        The reason a frame is dropped is its tag, not the frame it sits in."""
+        css = ".x{color:red;}" * 300
+        html = ('<body><main><p>SHORT ARTICLE</p>'
+                '<div class="sidebar"><style>' + css + '</style>NAV_WORD'
+                '</div></main></body>')
+        p = keyhole._reader(html)
+        self.assertIn("SHORT ARTICLE", keyhole._text_of(p))
+        # The nav inside the root is chrome, and chrome is allowed to cost
+        # something — this is the count that has to stay a count: eight
+        # characters of nav, and not one of the 4,500 of CSS beside it.
+        self.assertEqual(p.sup_in_root, len("NAV_WORD"))
+        self.assertLess(p.sup_in_root, len(css))
+        self.assertEqual(keyhole.analyze(html).rung, "strict")
+
+    def test_css_counted_as_prose_no_longer_trips_the_gate_by_itself(self):
+        """Why the hole reached the shipped gate and not only a probe: CSS read as
+        prose is enough on its own to push an honest page past `ATE_ROOT`. Here
+        the payload is bigger than the whole article kept, so the gate would
+        relax a page whose article is intact — the exact false positive the
+        uncurated corpus found in Torrebaja, reachable without a navbox."""
+        css = ".x{color:red;}" * 300
+        body = "ARTICLE " * 40
+        html = ('<body><main><p>' + body + '</p>'
+                '<div class="sidebar"><style>' + css + '</style>RELATED'
+                '</div></main></body>')
+        p = keyhole._reader(html)
+        # The claim the witness rests on: the payload alone outweighs the kept text.
+        self.assertGreater(len(css), len(keyhole._text_of(p)))
+        self.assertLessEqual(keyhole.root_lost_share(p), keyhole.ATE_ROOT)
+        self.assertFalse(keyhole.ate_the_root(p))
+        self.assertEqual(keyhole.analyze(html).rung, "strict")
+        self.assertIn("ARTICLE", keyhole._text_of(p))
+
     def test_the_gate_never_trips_on_the_audited_fixtures(self):
         """Every fixture in probe_rules is a shape keyhole must handle *without*
         relaxing. A gate that fires on one of them is eating pages that were

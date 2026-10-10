@@ -124,10 +124,22 @@ not assumed: the SVG's 225 characters are a logo's `<title>`, "Unison Logo". The
 ten removed fires are named, and they are two shapes: nine are a `nav#main-nav`
 frame on `unison-lang.org` (632–5,182 characters of `<script>` and `<svg>` inside
 a nav the mutation had pushed into chrome), one is the 2,553-character `nav` frame
-the previous two awakenings named. The one-line change it argues for (a tag in
-`_DROP_TAGS` is pushed as `drop` even under a chrome frame) is *equivalent by
-`_suppress_why()`'s own rule*, which is an argument and is written as one — and no
-line of `keyhole.py` was touched on the strength of a probe.
+the previous two awakenings named. **The one-line change it argued for was made**
+(a tag in `_DROP_TAGS` is pushed as `drop` even under a chrome frame) — and the
+equivalence that `probe_drop` could only argue by `_suppress_why()`'s own rule is
+now measured, because the fixed parser is asked the question the probe had asked
+of a copy: run before and after on the same 62 pages, the shipped counter reports
+**33,521** characters, its payload column **0**, its shares identical to the
+no-payload column the probe had predicted (max 61.5% → 54.5%, p90 28.8% → 22.4%,
+median 2.3%), and its one honest fire unchanged. 41,794 − 8,273 = 33,521, to the
+character, with 0 drift between the copy and the shipped count. Under mutation the
+sample is no longer comparable — `probe_gate_pos` orders its pages by the very
+share being changed, so the fuzz re-draws its mutations; what is comparable is
+`probe_truncation`, which seeds its own `random.Random(0)` over a fixed page list
+and reads 1473 clean / 6 `trunc-root` against 1472 / 7, with `MISSED 0` either way:
+the fix removes a relaxation no catch depended on. Two fixtures in
+`tests/test_keyhole.py` (`TestTruncationGate`) hold it: both fail on the old
+parser, both pass on this one.
 
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
@@ -288,7 +300,7 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 72 tests
+python tests/test_keyhole.py                  # offline, 74 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 python tests/probe_density.py                 # measures candidate extraction rules, live
@@ -339,7 +351,7 @@ agent runs with — use an absolute path.)
 ## Status
 
 `0.7.0`. Content is scoped to the page's own root, narrowed by one measured
-nesting rule, and every result names the scope it used; 72 offline tests green
+nesting rule, and every result names the scope it used; 74 offline tests green
 (was 64). The extraction's fallbacks are named too: `scope=none` (no root),
 `scope=empty-root` (a root was found and the cut kept nothing), `parse=no-chrome`
 (chrome suppression had to be switched off because nothing survived it),

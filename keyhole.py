@@ -330,6 +330,12 @@ class _Reader(HTMLParser):
         every page with an inline script look like an article being eaten (MDN
         40%, GitHub 90%, both measuring their own code). Only a chrome rule
         removes words a reader would have seen.
+
+        A tag in ``_DROP_TAGS`` reports ``drop`` wherever it sits, a chrome frame
+        included: the reason belongs to the tag, not to the frame that happens to
+        wrap it. Asking only when nothing else was suppressing is what let a
+        ``<style>`` inside a chrome div inherit ``chrome`` and pass its CSS off
+        as prose.
         """
         for _, w in reversed(self._stack):
             if w:
@@ -518,7 +524,19 @@ class _Reader(HTMLParser):
 
         suppress = self._suppress_why()
         if not suppress:
-            suppress = "drop" if tag in _DROP_TAGS else "chrome" if self._is_chrome(tag, a) else ""
+            suppress = "chrome" if self._is_chrome(tag, a) else ""
+        if tag in _DROP_TAGS:
+            # Asked last, and asked about the *tag* rather than about the frame
+            # it sits in. Consulting `_DROP_TAGS` only when nothing else was
+            # already suppressing let a `<style>` inside a chrome frame inherit
+            # `chrome` as its reason, so its CSS arrived as `data` and the
+            # counter read code as words a reader would have seen: 8,273
+            # characters on the honest corpus, 19.8% of everything it counts.
+            # This cannot turn a structural tag into chrome: a chrome frame can
+            # never open inside a drop frame (`_suppress_why` returns the
+            # innermost non-empty reason), so nothing below a dropped tag is
+            # ever re-opened.
+            suppress = "drop"
 
         if tag in ("ul", "ol"):
             self._list_depth += 1
