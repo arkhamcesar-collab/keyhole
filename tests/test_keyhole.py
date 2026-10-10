@@ -10,9 +10,11 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # tests/ — for probe_rules
 
 import keyhole  # noqa: E402
 import keyhole_mcp  # noqa: E402
+import probe_rules  # noqa: E402
 
 
 class TestParserSurvival(unittest.TestCase):
@@ -280,6 +282,67 @@ class TestNamedRelaxations(unittest.TestCase):
         self.assertIn("partial: ValueError", keyhole.corpus_body(res).split("\n")[0])
         json_row = keyhole.batch_payload(res)
         self.assertEqual(json_row["parse_error"], p.parse_error)
+
+
+class TestGuaranteeAudit(unittest.TestCase):
+    """tests/probe_rules.py answers "which of keyhole's guarantees actually fire,
+    and how much readable text does each one remove?". These tests keep the
+    harness honest — a mirror that drifts from the shipped predicate turns its
+    numbers into fiction."""
+
+    def test_probe_mirror_matches_the_shipped_predicate(self):
+        """probe_rules.chrome_rule re-implements _is_chrome to name the rule that
+        matched. It must agree with the shipped predicate on every branch, or the
+        audit measures a different tool than the one that ships."""
+        battery = [
+            ("div", {"class": "sidebar"}),
+            ("nav", {}),
+            ("footer", {}),
+            ("aside", {}),
+            ("div", {"class": "cookie-banner"}),
+            ("ul", {"id": "main-menu"}),
+            ("span", {"aria-hidden": "true"}),
+            ("div", {"role": "navigation"}),
+            ("div", {"role": "main"}),            # a content root, never chrome
+            ("html", {"class": "main-menu"}),     # never chrome: whole-page class
+            ("main", {"class": "sidebar"}),       # never chrome: it is the root
+            ("p", {"class": "site-nav"}),         # a class-check tag
+            ("table", {"id": "cookie-consent"}),
+            ("blockquote", {"class": "sidebar"}),  # not a class-check tag
+            ("div", {"class": "article-body"}),    # innocent
+            ("div", {}),
+        ]
+        for tag, a in battery:
+            self.assertEqual(
+                probe_rules.chrome_rule(tag, a) is not None,
+                keyhole._Reader._is_chrome(tag, a),
+                f"mirror disagrees with _is_chrome on <{tag} {a}>")
+
+    def test_audit_attributes_removals_to_the_rule_that_matched(self):
+        """The audit's core claim: a rule that fires removes readable text, per
+        rule. If it counted fires but not their effect, a no-op suppression would
+        look identical to a working one."""
+        html = ('<body><nav>NAVIGATION WORDS</nav>'
+                '<div aria-hidden="true">HIDDEN WORDS</div>'
+                '<main><p>THE ARTICLE</p></main></body>')
+        p = keyhole._reader(html, probe_rules._Audit)
+        self.assertEqual(p.scope, "main")
+        self.assertEqual(p.fire["tag:nav"][0], 1)
+        self.assertGreater(p.fire["tag:nav"][1], 0)
+        self.assertEqual(p.fire["aria-hidden"][0], 1)
+        self.assertGreater(p.fire["aria-hidden"][1], 0)
+
+    def test_the_override_guarantee_is_visible_to_the_audit(self):
+        """Root-override fired 0 times on 9 real pages, so the audit has to be
+        able to see it on the shape it exists for. This is the arm for a
+        guarantee the wild rarely pulls — the same role test_partial_parse
+        plays for the parser's exception catch."""
+        html = ('<body><article><p>TEASER</p></article>'
+                '<main><p>REAL ARTICLE BODY</p></main></body>')
+        a = keyhole._reader(html, probe_rules._Audit)
+        self.assertEqual(a.overrode, 1)
+        self.assertEqual(a.adoptions, ["article", "article->main"])
+        self.assertEqual(a.scope, "main")
 
 
 class TestWallClassification(unittest.TestCase):

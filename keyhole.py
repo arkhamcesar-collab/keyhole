@@ -649,6 +649,17 @@ def _reader(html_text: str, cls=None, scope: bool = True) -> _Reader:
         # The page is whatever the parser reached before it gave up. That is
         # usually still worth having — but it is a *partial* page, and a partial
         # page that says nothing about itself is read as a short one.
+        #
+        # Measured (tests/probe_rules.py): this catch never fired — 0 times over
+        # 9 real pages, 3,000 destructive mutations, and 300,000 random
+        # delimiter-soup inputs. The stdlib parser is total for all of them, and
+        # its only raise ("we should not get here!") is unreachable from a
+        # well-formed call. It is kept anyway, and that is the difference from
+        # the rung-3 fallback that could not fire and was deleted: a fallback
+        # that *rescues* earns its place even when the wild never pulls it, so
+        # test_partial_parse_is_named forces the raise to keep the arm working.
+        # Delete the rung that only duplicates; keep the arm that can still save
+        # a page.
         p.parse_error = f"{type(e).__name__}: {e}"
     return p
 

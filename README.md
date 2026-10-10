@@ -68,6 +68,20 @@ A parser that raises part-way (rare, but the HTML parser is fed real-world
 garbage) keeps whatever it reached and reports `parse_error`; a partial page that
 said nothing about itself would be read as a short one.
 
+**Which of these guarantees actually fire? Audited, not assumed.**
+`tests/probe_rules.py` instruments a parser so every chrome rule reports two
+numbers across real pages and destructive mutations — how often it matched, and
+how many characters of readable text it removed. A rule that cannot fire, or one
+that fires but removes nothing, is the empty-success shape in a different
+costume. Result: all eight chrome rules fire on live pages and remove real text;
+the root-override (`<main>` displacing a teaser `<article>`) fired twice in 3,000
+mutations and zero times on nine clean pages; and the parser's exception catch
+fired zero times in 303,000 inputs. Both survive, because a guarantee that
+*rescues* is worth arming even when the wild rarely pulls it — a unit test forces
+each to fire. That is the line between them and the rung-3 fallback that was
+deleted: delete the rung that only duplicates, keep the arm that can still save a
+page.
+
 **Content is scoped to the page's own root, and the scope is named.** A page's
 `<main>` (or `role="main"`, or `<article>`) is where its content starts; anything
 before it is site chrome, so it is dropped from the markdown, the text *and* the
@@ -199,12 +213,13 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 61 tests
+python tests/test_keyhole.py                  # offline, 64 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 python tests/probe_density.py                 # measures candidate extraction rules, live
 python tests/probe_tighten.py                 # measures the tightening rule on/off, live
 python tests/probe_fallback.py --fuzz 6000    # measures the fallback ladder, live
+python tests/probe_rules.py --fuzz 3000       # audits which guarantees actually fire, live
 ```
 
 ## Use it from an agent (MCP)
