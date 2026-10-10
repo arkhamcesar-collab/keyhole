@@ -404,6 +404,11 @@ def main():
               f"{s['silent_caught']:>3}/{f['silent']:<4} {s['zero_cost']:>8} {s['partial']:>8}")
 
     print(f"\n== control: does this run reproduce what probe_gate_pos published?")
+    if rounds != 1500:
+        print(f"   NOT COMPARABLE at --fuzz {rounds}: the published rows come from the "
+              f"1,500-round run, so a different N cannot reproduce them for a boring "
+              f"reason. The DIFFERENT below means 'different sample size', not "
+              f"'different experiment' — this check only has teeth at --fuzz 1500.")
     ok = True
     for k, (caught, no_cost) in CONTROL.items():
         s = f[k]
