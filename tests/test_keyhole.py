@@ -817,6 +817,91 @@ class TestProseCounter(unittest.TestCase):
             self.assertEqual(c["sup_punion"], self._para(html))
 
 
+class TestEmptyRegionGate(unittest.TestCase):
+    """The page whose *region* is empty. Named by the twenty-fourth awakening; its
+    fix measured — before it was written — by `tests/probe_empty_root.py`.
+
+    On the pinned sample (digest `24455059b09c0ea1`, 63 pages, order by url) the
+    shipped gate loses exactly one of twenty real truncations, and that one ships
+    **silently**: `readrare.com`, whose root `<main class="case">` is a shell the
+    JS fills. Its `scope` is `empty-root`, so the numerator of every reading that
+    attributes the loss to a frame *inside the root* is 0 by arithmetic and not by
+    agreement — the same 0.0% before and after the mutation that ate 2,199
+    characters. `span` (the whole-page delta) catches it; `span` is not shipped.
+
+    The price of judging the page where the region is empty was measured on the
+    honest corpus first, because that is where a false positive would live: the
+    hybrid fires on 1 of 63 honest pages — **the same page the shipped gate fires
+    on** — adds no relaxation, drops none, and buys the one silent miss in the
+    fuzz. Zero price, one capture, hence the branch in `_parse`.
+    """
+
+    KEPT = "KEPT_WORD " * 45
+    STORY = "STORY_WORD " * 100
+
+    # A page whose only root is an empty shell: the cut is abandoned (nothing
+    # inside it to keep), the whole page comes back, and a region reading has
+    # nowhere to look — even while a frame eats the article.
+    HONEST = f'<body><p>{KEPT}</p><p>{STORY}</p><main class="case"></main></body>'
+    EATEN = (f'<body><p>{KEPT}</p><aside><p>{STORY}</p></aside>'
+             f'<main class="case"></main></body>')
+
+    def test_a_page_with_no_region_is_judged_by_its_whole_page_delta(self):
+        strict = keyhole._reader(self.EATEN)
+        self.assertEqual(strict.scope, keyhole.SCOPE_EMPTY_ROOT)
+        # The silent ship, whole: something survived (the first rung is happy),
+        # and the gate cannot see the loss, because its numerator lives inside a
+        # region this page does not have.
+        self.assertTrue(keyhole._has_content(strict))
+        self.assertEqual(strict.sup_in_root, 0)
+        self.assertFalse(keyhole.ate_the_root(strict))
+        rung = keyhole.analyze(self.EATEN).rung
+        self.assertTrue(rung.startswith("trunc-root:"), rung)
+        self.assertIn("STORY_WORD", keyhole.html_to_markdown(self.EATEN))
+
+    def test_the_share_it_names_is_the_page_delta_it_measured(self):
+        """A number in a name is a claim, and this one is a different claim than
+        `root_lost_share` makes: the loss is measured against the page, because
+        that is the region the gate had to judge."""
+        strict = keyhole._reader(self.EATEN)
+        nc = keyhole._reader(self.EATEN, keyhole._NoChromeReader)
+        kept_nc = len(keyhole._text_of(nc))
+        lost = kept_nc - len(keyhole._text_of(strict))
+        self.assertGreater(lost, keyhole.EMPTY_TEXT)
+        printed = int(keyhole.analyze(self.EATEN).rung.split(":")[1].rstrip("%"))
+        self.assertEqual(printed, round(lost / kept_nc * 100))
+
+    def test_an_honest_page_with_no_region_is_not_relaxed(self):
+        self.assertEqual(keyhole._reader(self.HONEST).scope,
+                         keyhole.SCOPE_EMPTY_ROOT)
+        r = keyhole.analyze(self.HONEST)
+        self.assertEqual(r.rung, "strict")
+        self.assertIn("STORY_WORD", keyhole._text_of(r))
+
+    def test_the_second_region_does_not_fire_on_a_negative_delta(self):
+        """janestreet's inversion, as a fixture — and the reason the branch asks
+        instead of assuming.
+
+        On `blog.janestreet.com/...market-data/` the second empty-region page of
+        the corpus, the no-chrome pass scopes into a teaser card inside the
+        suppressed nav: 56 characters against the 11,161 the strict pass returned.
+        The page delta is **negative**, so the gate must leave the page alone — and
+        a branch that returned the no-chrome pass without asking would trade a
+        whole page for a five-word teaser, which is precisely the regression the
+        measured price was there to rule out.
+        """
+        teaser = "TEASER_WORD " * 3
+        html = (f'<body><nav><article><p>{teaser}</p></article></nav>'
+                f'<p>{self.STORY}</p></body>')
+        strict = keyhole._reader(html)
+        nc = keyhole._reader(html, keyhole._NoChromeReader)
+        self.assertEqual(strict.scope, keyhole.SCOPE_EMPTY_ROOT)
+        self.assertLess(len(keyhole._text_of(nc)), len(keyhole._text_of(strict)))
+        r = keyhole.analyze(html)
+        self.assertEqual(r.rung, "strict")
+        self.assertIn("STORY_WORD", keyhole._text_of(r))
+
+
 @unittest.skipUnless(os.environ.get("KEYHOLE_NET_TESTS"), "set KEYHOLE_NET_TESTS=1 for live checks")
 class TestLive(unittest.TestCase):
 

@@ -808,6 +808,30 @@ def _parse(html_text: str) -> _Reader:
     away more of the root's readable text than it kept, it is as failed as a pass
     that kept nothing, and the two are named differently: ``parse=no-chrome``
     when nothing survived, ``parse=trunc-root:NN%`` when a minority did.
+
+    ...but that gate has a region, and a page whose region is *empty* cannot be
+    judged by it at all. ``readrare.com`` — the one real truncation of the pinned
+    fuzz the shipped gate still loses, and the only one that ships *silently* —
+    has ``<main class="case">`` as a shell its JS fills: ``scope`` is
+    ``empty-root``, so ``sup_in_root`` is 0 on the honest page and 0 on the page a
+    frame ate 2,199 characters of. The same 0.0% before and after is arithmetic,
+    not agreement. Measured in ``tests/probe_empty_root.py`` before this branch
+    was written (digest ``24455059b09c0ea1``, the same 63 pages): judging the
+    whole-page delta *only where the region is empty* fires on 1 of 63 honest
+    pages — the same page the shipped gate fires on — adds no relaxation and
+    drops none, and buys that silent miss back. Zero price, one capture.
+
+    The second reading is asked, never assumed: on
+    ``blog.janestreet.com/…market-data/``, the corpus's other empty-region page,
+    the no-chrome pass scopes into a teaser card inside the suppressed nav (56
+    characters against 11,161) and the delta is *negative* — so the page is left
+    exactly as it was. A branch that returned the relaxed pass without asking
+    would trade a whole page for a five-word teaser.
+
+    A page with **no root at all** (``scope`` falsy) has the same empty numerator
+    and is deliberately *not* covered here: the measured corpus has 13 of those
+    and every one is outside the floor, so applying this to them would be an
+    unmeasured change. It is an open thread, not an oversight.
     """
     p = _reader(html_text)
     if not _has_content(p):
@@ -819,6 +843,17 @@ def _parse(html_text: str) -> _Reader:
         q = _reader(html_text, _NoChromeReader)
         q.rung = f"trunc-root:{lost * 100:.0f}%"
         return q
+    if p.scope == SCOPE_EMPTY_ROOT:
+        # The gate has no region: judge the page, and only when the page lost
+        # more than it kept (the same judgment `ate_the_root` makes about the
+        # root, moved to the one region this page has).
+        kept = len(_text_of(p))
+        q = _reader(html_text, _NoChromeReader)
+        kept_nc = len(_text_of(q))
+        lost = kept_nc - kept
+        if lost > kept and lost > EMPTY_TEXT:
+            q.rung = f"trunc-root:{lost / kept_nc * 100:.0f}%"
+            return q
     return p
 
 

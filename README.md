@@ -162,6 +162,31 @@ the fix removes a relaxation no catch depended on. Two fixtures in
 `tests/test_keyhole.py` (`TestTruncationGate`) hold it: both fail on the old
 parser, both pass on this one.
 
+**The page whose region is empty, and the one silent truncation the gate loses**
+(`tests/probe_empty_root.py`) — every reading this family has tried attributes the
+loss to a frame *inside the root*, and the shipped gate's numerator lives there too
+(`root_lost_share` divides by the root). On `readrare.com` that region does not
+exist: `<main class="case">` is a shell its JS fills, so `scope` is `empty-root` and
+the gate reads 0.0% on the honest page and 0.0% on a page a frame ate 2,199
+characters of — the same zero before and after the mutation, which is arithmetic
+and not agreement. On the pinned sample (`24455059b09c0ea1`, 63 pages, order by
+url) that page is the single real truncation of twenty the shipped gate loses, and
+the only one that ships **silently** (`parse=strict`); `span` catches it, and
+`span` is not shipped. The fix that follows — judge the whole-page delta *only
+where the region is empty* — was priced before it was written, because a false
+positive would live in exactly the pages it applies to: it fires on **1 of 63
+honest pages, the same page the shipped gate fires on** (the two counters' one fire
+is one fire), adds no relaxation, drops none, and buys that miss back. The corpus's
+other empty-region page, `blog.janestreet.com/…market-data/`, is where the second
+region reads a *negative* delta — the no-chrome pass scopes into a 56-character
+teaser card inside the suppressed nav, against the 11,161 the strict pass returned
+— so the branch asks before it acts and leaves that page exactly as it was. The
+change is in `_parse`, not in `ate_the_root`: the gate predicate still has no region
+there, the ladder now has a second one. Four fixtures in `TestEmptyRegionGate` hold
+it (two of them fail on the old ladder), and the curated nine-page probe is
+byte-identical before and after (1473 clean / 21 no-chrome / 6 `trunc-root`,
+`MISSED 0`).
+
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
 abandoned whenever it would keep nothing, so a rung-2 result can never be empty
@@ -321,7 +346,7 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 74 tests
+python tests/test_keyhole.py                  # offline, 82 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 python tests/probe_density.py                 # measures candidate extraction rules, live
@@ -335,6 +360,7 @@ python tests/probe_counts.py --fuzz 600       # which probes print a measurement
 python tests/probe_reason.py --fuzz 1500      # why a suppression failed, not how much it ate
 python tests/probe_region.py --fuzz 1500      # the loss the caller reads, and the CSS counted as text
 python tests/probe_drop.py --fuzz 1500        # the same hole in the shipped gate, and its price
+python tests/probe_empty_root.py --fuzz 1500 --order=url   # the fix's price, before it was built
 ```
 
 ## Use it from an agent (MCP)
