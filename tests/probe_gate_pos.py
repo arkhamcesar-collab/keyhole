@@ -42,6 +42,45 @@ nothing. And both are scored on the same two numbers that decide everything —
 false positives on honest pages, misses under mutation — because a narrower gate
 pays for every honest page it saves with a silent truncation it stops catching.
 
+Eleventh awakening — the door the paragraph counter leaves closed. The tenth
+measured `ptext` as the only candidate with zero false positives and zero no-cost
+relaxations, and it loses 2 of 20 real truncations. The thread recorded a guess
+for those two: articles that *are lists* (PEP 8, docs.python.org), text living in
+`<li>` where a paragraph counter cannot see it. So this probe now attributes the
+suppressed text in the root **by the kind of element that held it** (`p`, `li`,
+`pre`, `td`, `other`) and adds
+
+    plist   prose + list-item text, same reading as `ptext` and by the same
+            structural rule
+
+and — because a guess about *two cases* is not a measurement — it names them: the
+kind breakdown of every real truncation, and of the ones each candidate misses. A
+candidate that recovers the two by opening the `<li>` door also opens it for every
+chrome list on the honest corpus, and Torrebaja's navbox (`role=navigation`) is a
+list of municipality names. Whether that door is worth opening is exactly what the
+breakdown decides, and the honest answer is allowed to be "no".
+
+**Measured, and it is no.** On 62 honest pages + the same 1500 mutations:
+
+    shipped   caught 20/20   no-cost 34
+    ptext     caught 18/20   no-cost  0
+    plist     caught 19/20   no-cost 24
+    open      caught 14/20
+
+`plist` fires on the honest corpus exactly once — Torrebaja — and the text it
+counts there is the navbox (`li:2 999`, `td:1 233`, `p:0`): opening the `<li>` door
+opens it for the chrome list this thread exists to stop counting. And the two
+`ptext` misses are not the cases the guess named. One is a mutation of Torrebaja
+itself, recovered only by counting the navbox that the honest page was already
+dropping; the other's eaten text is `other:1 818` — neither `<p>` nor `<li>`. Of
+the 20 real truncations, 19 dropped paragraph text, 8 dropped list items, so the
+blind spot was never "lists": a class counter cannot be measured into existence by
+the two cases it was invented for, and naming the cases is what killed the guess.
+
+The tenth awakening's conclusion survives the eleventh: no candidate is a strict
+improvement, `ptext`/`ppara` remain the only readings with zero false positives,
+and the gate that ships is still the shipped one.
+
 Run:  python tests/probe_gate_pos.py [--fuzz N] [--min-chars N]
 """
 import importlib.util
@@ -58,7 +97,15 @@ from keyhole import _NoChromeReader, _Reader  # noqa: E402
 
 DEFAULT_LIST = os.path.join(HERE, "tests", "corpus", "gate_urls.txt")
 
-CANDIDATES = ("shipped", "span", "ptext", "open", "ppara")
+CANDIDATES = ("shipped", "span", "ptext", "open", "ppara", "plist")
+
+# Which kind of element held the text suppression removed. Only containers that
+# plausibly carry article text; everything else (a bare link label, a `<div>`
+# wrapper, a `<span>`) is "other" and is deliberately *not* a candidate — the
+# point of the breakdown is to see what the loss is made of before choosing.
+_KIND_OF = {"p": "p", "li": "li", "pre": "pre", "code": "pre",
+            "td": "td", "th": "td"}
+KINDS = ("p", "li", "pre", "td", "other")
 
 
 def _load_sibling(name: str):
@@ -71,6 +118,14 @@ def _load_sibling(name: str):
 
 _pg = _load_sibling("probe_gate")
 _pr = _load_sibling("probe_rules")
+
+
+def _fmt_kinds(kinds) -> str:
+    """The breakdown in one cell, biggest first, empty kinds left out."""
+    if not kinds:
+        return "-"
+    return " ".join(f"{k}:{v}" for k, v in
+                    sorted(kinds.items(), key=lambda kv: -kv[1]) if v)
 
 
 class _PosReader(_Reader):
@@ -88,13 +143,22 @@ class _PosReader(_Reader):
         (`_ParaLoss`'s blind spot: a `<p>` opened inside suppression never
         increments it, so the prose counter read 0 on the exact cases it was
         written for).
+      * `sup_kind` — the same text split by the kind of element that held it
+        (`p`, `li`, `pre`, `td`, `other`), so the guess "the two the prose
+        counter misses are lists" can be checked against what was actually
+        eaten instead of believed. `sup_ptext` keeps its own counter (and its own
+        rule) so the tenth awakening's numbers stay comparable; the breakdown
+        only ever counts text that is *not* inside a suppressed `<p>`, so the
+        two never double-count the same characters.
     """
 
     def __init__(self, scope: bool = True):
         super().__init__(scope)
         self.sup_ptext = 0
+        self.sup_kind: dict[str, int] = {}
         self.frames: list[dict] = []
         self._sup_p = 0          # <p> open, in the suppressed subtree
+        self._marks: list[str] = []   # kinds open, in the suppressed subtree
 
     def handle_starttag(self, tag, attrs):
         a = self._attrs(attrs)
@@ -102,13 +166,16 @@ class _PosReader(_Reader):
         was = self._suppress_why()
         in_root = self._in_root_region()
         super().handle_starttag(tag, attrs)
-        if not was and in_root and self._suppress_why() == "chrome":
+        chrome = self._suppress_why() == "chrome"
+        if not was and in_root and chrome:
             self.frames.append({
                 "label": self._attr_label(tag, a), "tag": tag,
-                "depth": len(self._stack), "chars": 0, "how": None,
+                "depth": len(self._stack), "chars": 0, "kinds": {}, "how": None,
             })
-        if tag == "p" and self._suppress_why() == "chrome":
+        if tag == "p" and chrome:
             self._sup_p += 1
+        if tag in _KIND_OF and chrome:
+            self._marks.append(_KIND_OF[tag])
 
     def handle_endtag(self, tag):
         tag = tag.lower()
@@ -128,16 +195,34 @@ class _PosReader(_Reader):
                             else "unwind")
         if tag == "p" and suppressed_here and self._sup_p:
             self._sup_p -= 1
+        if suppressed_here and tag in _KIND_OF:
+            kind = _KIND_OF[tag]
+            for i in range(len(self._marks) - 1, -1, -1):
+                if self._marks[i] == kind:
+                    del self._marks[i]
+                    break
 
     def handle_data(self, data):
         if data.strip() and self._suppress_why() == "chrome" and self._in_root_region():
             if self._sup_p:
                 self.sup_ptext += len(data)
+                kind = "p"
+            else:
+                kind = self._marks[-1] if self._marks else "other"
+                self.sup_kind[kind] = self.sup_kind.get(kind, 0) + len(data)
             for f in reversed(self.frames):
                 if f["how"] is None:
                     f["chars"] += len(data)
+                    f["kinds"][kind] = f["kinds"].get(kind, 0) + len(data)
                     break
         super().handle_data(data)
+
+    def kinds(self) -> dict:
+        """Every character removed from the root, by kind — `p` included."""
+        out = dict(self.sup_kind)
+        if self.sup_ptext:
+            out["p"] = out.get("p", 0) + self.sup_ptext
+        return out
 
     def close(self):
         super().close()
@@ -156,6 +241,8 @@ def candidates(html: str) -> dict:
     pos = keyhole._reader(html, _PosReader)
     floor = keyhole.EMPTY_TEXT
     ptext = pos.sup_ptext
+    li = pos.sup_kind.get("li", 0)
+    plist = ptext + li
     open_ = sum(f["chars"] for f in pos.frames if f["how"] != "matched")
     return {
         "kept": kept,
@@ -163,6 +250,9 @@ def candidates(html: str) -> dict:
         "kept_para": pos._para,
         "sup_in_root": m["drop_in_root"],
         "sup_ptext": ptext,
+        "sup_li": li,
+        "sup_plist": plist,
+        "sup_kind": pos.kinds(),
         "sup_open": open_,
         "shipped_share": m["ratio"],
         "shipped_fires": m["ate"],
@@ -176,6 +266,11 @@ def candidates(html: str) -> dict:
         # outside the tightened container was never in `kept` to be lost, and
         # counting it fires on pages nothing happened to.
         "ppara_fires": ptext > pos._para and ptext > floor,
+        # The eleventh awakening's door: the same reading as `ptext`, with list
+        # items counted too. It is the candidate the "the two it misses are
+        # lists" guess implies, and the breakdown above says whether the guess
+        # is even about the right cases.
+        "plist_fires": plist > kept and plist > floor,
         "open_fires": open_ > kept and open_ > floor,
         "frames": pos.frames,
         "rung": m["rung"],
@@ -209,14 +304,20 @@ def fuzz(pages, clean_kept, rounds, seed=0):
     lives or dies on: a candidate that fires where the shipped gate doesn't is
     not free, it is *adding* a relaxation, and every one of those costs an
     honest page unless it is also right.
+
+    Every real truncation is also recorded with the kind breakdown of what the
+    mutation removed, and every candidate's misses are named with theirs — so
+    "ptext misses two, and they are lists" is either visible in the output or
+    not true.
     """
     rnd = random.Random(seed)
     out = {k: {"caught": 0, "missed_real": 0, "silent_caught": 0,
-               "zero_cost": 0, "partial": 0} for k in CANDIDATES}
-    out.update({"real": 0, "silent": 0, "caught_now": 0, "n": 0})
+               "zero_cost": 0, "partial": 0, "examples": []} for k in CANDIDATES}
+    out.update({"real": 0, "silent": 0, "caught_now": 0, "n": 0,
+                "real_kinds": {}})
     for _ in range(rounds):
         i = rnd.randrange(len(pages))
-        src = pages[i]
+        src, label = pages[i]
         clean = clean_kept[i]
         anchors = [m for m in ("<main", "<article") if m in src]
         if rnd.random() < 0.75 and anchors:
@@ -246,6 +347,8 @@ def fuzz(pages, clean_kept, rounds, seed=0):
         silent = real and c["rung"] == "strict"
         if real:
             out["real"] += 1
+            for k, v in c["sup_kind"].items():
+                out["real_kinds"][k] = out["real_kinds"].get(k, 0) + 1
             if silent:
                 out["silent"] += 1
             else:
@@ -267,6 +370,12 @@ def fuzz(pages, clean_kept, rounds, seed=0):
                     out[k]["zero_cost"] += 1
             elif real:
                 out[k]["missed_real"] += 1
+                if len(out[k]["examples"]) < 6:
+                    out[k]["examples"].append({
+                        "label": label, "clean": clean, "kept": c["kept"],
+                        "lost": lost, "kinds": dict(c["sup_kind"]),
+                        "ptext": c["sup_ptext"], "li": c["sup_li"],
+                    })
     return out
 
 
@@ -304,16 +413,20 @@ def main():
 
     rows.sort(key=lambda r: -r["shipped_share"])
     print(f"{'src':<12} {'kept':>7} {'kc':>7} {'in_root':>8} {'in_ptext':>8} "
-          f"{'unclosed':>8} {'shipped':>8} {'region':>8}  fires")
-    print("-" * 96)
+          f"{'in_li':>7} {'unclosed':>8} {'shipped':>8} {'region':>8}  fires")
+    print("-" * 104)
     for r in rows:
         fires = (("S" if r["shipped_fires"] else "-") + ("R" if r["span_fires"] else "-")
                  + ("P" if r["ptext_fires"] else "-") + ("O" if r["open_fires"] else "-"))
         print(f"{r['src']:<12} {r['kept']:>7} {r['kept_nc']:>7} {r['sup_in_root']:>8} "
-              f"{r['sup_ptext']:>8} {r['sup_open']:>8} {r['shipped_share'] * 100:>7.1f}% "
-              f"{r['span_share'] * 100:>7.1f}%  {fires}")
+              f"{r['sup_ptext']:>8} {r['sup_li']:>7} {r['sup_open']:>8} "
+              f"{r['shipped_share'] * 100:>7.1f}% {r['span_share'] * 100:>7.1f}%  {fires}")
 
     print(f"\n== {len(rows)} measurable pages  ({len(skipped)} left out, named below)")
+    print(f"   what the removed root text is made of, worst ten pages:")
+    for r in rows[:10]:
+        print(f"     {r['src']:<12} in_root {r['sup_in_root']:>7}  "
+              f"{_fmt_kinds(r['sup_kind'])}")
     for k, lbl in (("shipped_share", "shipped (counter vs kept)"),
                    ("span_share", "same region (both passes)")):
         vals = sorted(r[k] for r in rows if r["kept"] >= floor)
@@ -322,29 +435,39 @@ def main():
     print(f"\n   fires on the honest corpus:  "
           + "   ".join(f"{k.replace('_fires', '')} {len([r for r in rows if r[k]])}"
                        for k in ("shipped_fires", "span_fires", "ptext_fires",
-                                 "ppara_fires", "open_fires")))
-    for k in ("shipped_fires", "span_fires", "ptext_fires", "ppara_fires", "open_fires"):
+                                 "ppara_fires", "plist_fires", "open_fires")))
+    for k in ("shipped_fires", "span_fires", "ptext_fires", "ppara_fires",
+              "plist_fires", "open_fires"):
         for r in [r for r in rows if r[k]]:
             print(f"   {k.replace('_fires', ''):<8} fires: {r['url']}  "
                   f"kept {r['kept']:,}  in_root {r['sup_in_root']:,}  "
-                  f"in_ptext {r['sup_ptext']:,}  unclosed {r['sup_open']:,}")
+                  f"in_ptext {r['sup_ptext']:,}  in_li {r['sup_li']:,}  "
+                  f"unclosed {r['sup_open']:,}")
+            print(f"       ↳ was: {_fmt_kinds(r['sup_kind'])}")
             for f in sorted(r["frames"], key=lambda f: -f["chars"])[:3]:
-                print(f"       ↳ {f['chars']:>7}  {f['label']:<28} ended {f['how']}")
+                print(f"       ↳ {f['chars']:>7}  {f['label']:<28} ended {f['how']}"
+                      f"   {_fmt_kinds(f['kinds'])}")
 
     if rounds:
-        htmls = []
+        # (html, label) — the page, not its name. Feeding the fuzz the label put
+        # every mutation into ten characters of corpus name and reported a clean
+        # zero with nothing lost: the instrument measuring the wrong object looks
+        # exactly like the instrument measuring the right one.
+        pages, clean_kept = [], []
         for r in rows:
             try:
-                htmls.append(_pg.cached_download(r["url"]))
+                html = _pg.cached_download(r["url"])
             except Exception:
-                pass
-        clean_kept = [candidates(h)["kept"] for h in htmls]
+                continue
+            pages.append((html, r["src"]))
+            clean_kept.append(candidates(html)["kept"])
         print(f"\n== fuzz: {rounds} mutations that open a suppression inside the root")
-        f = fuzz(htmls, clean_kept, rounds)
+        f = fuzz(pages, clean_kept, rounds)
         print(f"   mutations scored:                     {f['n']}")
         print(f"   the mutation really ate the article:  {f['real']}"
               f"   (strict kept > {keyhole.EMPTY_TEXT} chars and lost > half of")
         print(f"     {'':<34}the page's own clean extraction)")
+        print(f"     of those, what was eaten, by kind (chars): {_fmt_kinds(f['real_kinds'])}")
         print(f"   of those, the ladder caught it:       {f['caught_now']}")
         print(f"   of those, SILENT (parse=strict):      {f['silent']}   <-- what the gate")
         print(f"     {'':<34}exists to catch")
@@ -353,6 +476,11 @@ def main():
             print(f"   {k:<8} {f[k]['caught']:>7} {f[k]['missed_real']:>7} "
                   f"{f[k]['silent_caught']:>3}/{f['silent']:<4} {f[k]['zero_cost']:>8} "
                   f"{f[k]['partial']:>8}")
+        for k in ("ptext", "plist"):
+            for ex in f[k]["examples"]:
+                print(f"   {k} MISSED: {ex['label']}  clean {ex['clean']:,} kept "
+                      f"{ex['kept']:,} (lost {ex['lost']:,})  ptext {ex['ptext']:,} "
+                      f"li {ex['li']:,}  eaten: {_fmt_kinds(ex['kinds'])}")
 
     print(f"\n== left out ({len(skipped)}) — named, not folded into a total")
     for src, url, why in skipped:
