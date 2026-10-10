@@ -65,12 +65,23 @@ used (`scope=main`, `scope=none`), in the batch row, in `--json` and in the
 corpus file's header — because a scoping that silently did nothing looks exactly
 like one that worked, and only one of those is worth trusting.
 
-Verified live: on MDN the file now starts at the `<h1>` instead of
-`- Skip to main content / - Skip to search / - Web / - HTML / …`; on npm the
-2FA announcement banner is gone. Wikipedia improves by only 74 characters,
-because Vector 2022 puts the language dropdown and the table of contents *inside*
-`<main id="content">` — the semantic root there wraps the UI, not the article.
-That is a real limit of this rule, not a bug in it.
+**Inside the root, the cut is narrowed to the paragraphs.** A semantic root is not
+always the article. Wikipedia's Vector 2022 skin keeps the language switcher and
+the table of contents *inside* `<main id="content">`, where no structural rule can
+reach them. So after cutting at the root the extractor cuts again — at the
+innermost container inside the root that still holds essentially all of the root's
+`<p>` text. The rule was measured before it was built
+(`tests/probe_density.py`); it can only ever narrow the cut, never widen it, and it
+names itself: `scope=main>div.mw-content-ltr`.
+
+Verified live: on Wikipedia the file no longer opens on sixty language names but
+on `American technology company Cloudflare, Inc. …` (−1,685 characters); on MDN it
+starts at the `<h1>` instead of `- Skip to main content / - Skip to search / …`;
+on npm the 2FA banner and the `Readme · Code · Beta` tab chrome are gone. Pages
+with no `<main>`/`<article>` — `example.com`, Hacker News — report `scope=none`
+and keep everything. Over eleven sites the rule never grew a page and never lost
+one (`tests/probe_tighten.py`, which runs each page with the tightening on and
+off).
 
 **Escalation is explicit and honest.** `--render` drives headless Chrome
 (`--dump-dom`) for JS-rendered pages and JS challenges. A missing Chrome binary
@@ -106,7 +117,9 @@ forty times — so `batch` exists and reports *counts*, not bodies.
 ```
 
 `scope=` is where the content was taken from: `main`, `article`, `div[role=main]`,
-or `none` when the page has no such root and the whole document was kept.
+or `none` when the page has no such root and the whole document was kept. When
+the cut was narrowed further inside the root, the narrowing is named too —
+`scope=main>div.mw-content-ltr`.
 
 Input is one URL per line, blank lines and `#`-comment lines skipped, duplicates
 collapsed (first occurrence wins). `#` is deliberately **not** an inline comment
@@ -208,26 +221,24 @@ agent runs with — use an absolute path.)
 
 ## Status
 
-`0.4.0`. Content is scoped to the page's own root and every result names the root
-it used; 54 offline tests green (was 45); verified live over five sites — MDN,
-npm, Wikipedia, `example.com`, Hacker News — where the markdown for MDN now opens
-at its `<h1>` and for npm the announcement banner is gone, while the two pages
-with no `<main>`/`<article>` report `scope=none` and keep everything. Wikipedia
-was the page that motivated this and it improves by 74 characters: its Vector 2022
-skin wraps the language dropdown and the table of contents inside
-`<main id="content">`, so a structural root cannot reach them. The next step there
-was assumed to be density-based scoring; `tests/probe_density.py` measured it and
-split the verdict. Non-link text as the signal is **dead**: on Wikipedia it picks
-an ancestor of `<main>` (a −7 character change), and on MDN and npm it picks
-exactly today's container. Paragraph text is the signal that survives — but only
-as a *tightening* of the structural cut, never above it: after cutting at
-`<main>`/`<article>`, cut again at the innermost container that still holds ~all
-of the page's `<p>` text. Measured through keyhole's own extractor, that is
-Wikipedia −1,692 characters with the file no longer opening on sixty language
-names, npm −111 with the `Readme · Code · Beta` tab chrome gone, and MDN,
-`example.com` and Hacker News unchanged — nothing loses the article marker and
-nothing grows. So the honest next step is narrower than "a real reader": one more
-nesting rule, measured, not a project. (`deepest root wins` was likewise measured
-and dropped: npm's `<main>` has a nested `<article>`, MDN has none at all, so it
-would buy one site and not the one that prompted the work.) Then `--out` over
-MCP, so an agent can build a corpus, not just survey one.
+`0.5.0`. Content is scoped to the page's own root, narrowed by one measured
+nesting rule, and every result names the scope it used; 57 offline tests green
+(was 54); verified live over five sites — MDN, npm, Wikipedia, `example.com`,
+Hacker News.
+
+The page that motivated this was Wikipedia, and for a while it improved by only 74
+characters: its Vector 2022 skin wraps the language dropdown and the table of
+contents *inside* `<main id="content">`, so a structural root cannot reach them.
+The next step there was assumed to be density-based scoring; `tests/probe_density.py`
+measured it and split the verdict. Non-link text as the signal is **dead**: on
+Wikipedia it picks an ancestor of `<main>` (a −7 character change), and on MDN and
+npm it picks exactly today's container. Paragraph text is the signal that survived
+— but only as a *tightening* of the structural cut, never above it — and it is now
+built: Wikipedia −1,685 characters (`scope=main>div.mw-content-ltr`, no longer
+opening on sixty language names), npm −133 with the `Readme · Code · Beta` tab
+chrome gone, and MDN, `example.com` and Hacker News unchanged. Over eleven sites
+the rule never grew a page and never lost the article marker
+(`tests/probe_tighten.py`). (`deepest root wins` was likewise measured and
+dropped: npm's `<main>` has a nested `<article>`, MDN has none at all, so it would
+buy one site and not the one that prompted the work.) Next: `--out` over MCP, so an
+agent can build a corpus, not just survey one.

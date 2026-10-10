@@ -214,8 +214,9 @@ def tool_fetch_many(args: dict) -> dict:
     results = keyhole.run_batch(urls, do_render=do_render, jobs=int(args.get("jobs") or 4))
 
     lines = []
+    scope_w = max([len(r.scope or "none") for r in results] + [12])
     for i, r in enumerate(results, 1):
-        lines += keyhole.format_batch_row(i, len(results), r).splitlines()
+        lines += keyhole.format_batch_row(i, len(results), r, scope_w).splitlines()
     ok = sum(1 for r in results if r.ok)
     walled = sum(1 for r in results if r.wall)
     lines.append("")

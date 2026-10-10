@@ -121,6 +121,52 @@ class TestContentScope(unittest.TestCase):
         self.assertIn("# ARTICLE", md)
         self.assertIn("Real body text", md)
 
+    def test_paragraph_tightening_drops_chrome_inside_the_root(self):
+        """REGRESSION: Vector 2022 puts the language switcher and the table of
+        contents *inside* <main id="content">, so the structural cut cannot reach
+        them — Wikipedia improved by only 74 characters because of it. What can
+        reach them: the article is the only container in there holding the
+        paragraphs, so the cut is narrowed to it, and says so."""
+        html = ('<body><p>Jump to content</p><main id="content">'
+                '<div id="langs"><a href="/de">LANG_DEUTSCH</a></div>'
+                '<div id="toc"><a href="#x">Contents</a></div>'
+                '<div id="body"><p>The article opens here.</p>'
+                '<p>And continues.</p></div>'
+                '<div id="catlinks"><a href="/c">Category</a></div>'
+                '</main></body>')
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "main>div#body")
+        md = keyhole._markdown_of(p)
+        self.assertIn("The article opens here.", md)
+        self.assertIn("And continues.", md)
+        self.assertNotIn("LANG_DEUTSCH", md)
+        self.assertNotIn("Contents", md)
+        # Narrowing never widens: chrome before the root stays dropped.
+        self.assertNotIn("Jump to content", md)
+        self.assertNotIn("Category", md)
+
+    def test_a_root_without_paragraphs_is_not_tightened(self):
+        """The rule keys on <p> text. A root with no paragraphs has nothing to
+        tighten against, so the structural scope is reported unchanged."""
+        html = '<body><main><div id="wrap"><h1>REAL</h1></div></main></body>'
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "main")
+        self.assertIn("REAL", keyhole._markdown_of(p))
+
+    def test_tightening_never_drops_a_paragraph_it_cannot_cover(self):
+        """Two sibling containers split the root's paragraph text; neither covers
+        the other, so neither is a candidate and nothing is narrowed. The rule
+        keeps the article, it does not pick a piece of it."""
+        html = ('<body><main>'
+                '<div id="lead"><p>' + "A" * 300 + '</p></div>'
+                '<div id="rest"><p>' + "B" * 300 + '</p></div>'
+                '</main></body>')
+        p = keyhole.analyze(html)
+        self.assertEqual(p.scope, "main")
+        md = keyhole._markdown_of(p)
+        self.assertIn("A" * 300, md)
+        self.assertIn("B" * 300, md)
+
     def test_scope_is_reported_not_guessed(self):
         html = '<body><p>a</p><main><p>REAL</p></main></body>'
         self.assertEqual(keyhole.analyze(html).scope, "main")

@@ -25,6 +25,11 @@ Four candidate rules per URL:
 Each prints kept length, delta vs today, whether the article marker survives,
 and the head, so the change is eyeballed rather than trusted.
 
+Once the paragraph rule shipped in keyhole.py the `today` row *is* the tightened
+result, so the deltas here collapse to zero — this file is the frozen record of
+why the rule was chosen, not a pass/fail. The on/off check that the rule never
+loses or grows a page lives in tests/probe_tighten.py.
+
     python tests/probe_density.py
 """
 import os
