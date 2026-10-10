@@ -32,6 +32,28 @@ underlying problem:
 The `1010` case is the common one: Cloudflare rejects a request whose
 `User-Agent` says `Python-urllib`. A realistic header set fixes it outright.
 
+## When to use this — and when not to
+
+Be honest about which half you need, because Keyhole is a wrapper with opinions,
+not a new extraction algorithm:
+
+- **You only need clean text from a friendly page.** Use
+  [`trafilatura`](https://github.com/adbar/trafilatura) or Mozilla's Readability.
+  Trafilatura is the benchmark leader at main-content extraction and is a decade
+  of specialised work. Keyhole's extractor exists to be *dependency-free*, not to
+  be best in class.
+- **You need to get past something** — a `403`, a Cloudflare interstitial, a page
+  that returns 18 characters of React shell — **or you need to know *which* wall
+  you hit.** That is what Keyhole is for: it names the wall and says the way out,
+  and it never returns empty when the page had text.
+- **The page needs a login.** Use a real browser with your own session. Keyhole
+  does not touch credentials and does not pretend to (an Instagram carousel
+  behind a login wall comes back as exactly that, named).
+
+If a benchmark on your own corpus says another extractor wins, the useful move is
+to keep this outer layer — wall naming, empty-never, `--render` escalation — and
+swap the engine underneath it.
+
 ## Design
 
 **Walls are named, never returned.** When a response is a bot wall, Keyhole says
@@ -440,8 +462,8 @@ agent runs with — use an absolute path.)
 ## Status
 
 `0.7.0`. Content is scoped to the page's own root, narrowed by one measured
-nesting rule, and every result names the scope it used; 74 offline tests green
-(was 64). The extraction's fallbacks are named too: `scope=none` (no root),
+nesting rule, and every result names the scope it used; 85 offline tests green,
+1 skipped (was 74). The extraction's fallbacks are named too: `scope=none` (no root),
 `scope=empty-root` (a root was found and the cut kept nothing), `parse=no-chrome`
 (chrome suppression had to be switched off because nothing survived it),
 `parse=trunc-root:NN%` (it was switched off because it had eaten NN% of the

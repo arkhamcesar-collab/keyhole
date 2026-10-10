@@ -1,5 +1,5 @@
 keyhole 0.7.0 — what the gate's fires are made of
-corpus: C:\Users\cesar\Projects\keyhole\tests\corpus\band_urls.txt  (363 urls)   floor 200   --extended (only the floor excludes)
+corpus: tests\corpus\band_urls.txt  (363 urls)   floor 200   --extended (only the floor excludes)
 
    page order: 353 pages by shipped_share — the number under test   sample digest e8d5df572463cd5c
 
