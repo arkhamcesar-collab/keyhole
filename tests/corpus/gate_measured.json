@@ -1,0 +1,1136 @@
+{
+ "gate": 0.5,
+ "floor": 200,
+ "measured": [
+  {
+   "src": "hn",
+   "url": "https://geohot.github.io//blog/jekyll/update/2026/10/10/lobbying.html",
+   "kept": 1254,
+   "shipped": 1254,
+   "drop_in_root": 0,
+   "drop_out_root": 192,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.post-content",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://rea.tools/",
+   "kept": 8249,
+   "shipped": 8249,
+   "drop_in_root": 896,
+   "drop_out_root": 197,
+   "ratio": 0.09797703663203937,
+   "ate": false,
+   "scope": "main",
+   "rung": "strict",
+   "by_label": {
+    "aria-hidden @ span.prompt-symbol": 6,
+    "tag:aside @ aside.expert-reasoning": 889,
+    "aria-hidden @ span": 1
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://deno.com/blog/cloudflare",
+   "kept": 3431,
+   "shipped": 3431,
+   "drop_in_root": 0,
+   "drop_out_root": 2278,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.markdown-body",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://minesweeper.mikelacher.com/",
+   "kept": 0,
+   "shipped": 0,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "empty-root",
+   "rung": "no-chrome",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://www.usenix.org/conference/usenixsecurity24/presentation/zhang-qibo",
+   "kept": 2675,
+   "shipped": 2675,
+   "drop_in_root": 0,
+   "drop_out_root": 1977,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.content",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://beaksec.github.io/posts/telegram-desktop-one-click-account-takeover/",
+   "kept": 0,
+   "shipped": 0,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "empty-root",
+   "rung": "no-chrome",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://blog.janestreet.com/can-you-use-autoregressive-diffusion-to-generate-market-data/",
+   "kept": 11161,
+   "shipped": 11161,
+   "drop_in_root": 55,
+   "drop_out_root": 2843,
+   "ratio": 0.004903708987161198,
+   "ate": false,
+   "scope": "empty-root",
+   "rung": "strict",
+   "by_label": {
+    "class:main-menu @ div.main-menu": 55
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://carrierexplode.com/",
+   "kept": 628,
+   "shipped": 628,
+   "drop_in_root": 0,
+   "drop_out_root": 38,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://typesafe.ai/blog/series-ai",
+   "kept": 1520,
+   "shipped": 1520,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://lwn.net/Articles/1055211/",
+   "kept": 23214,
+   "shipped": 23214,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://jessewaites.com/blog/post/i-pointed-ai-at-400-years-of-archives/",
+   "kept": 22317,
+   "shipped": 22317,
+   "drop_in_root": 304,
+   "drop_out_root": 154,
+   "ratio": 0.013438840015914416,
+   "ate": false,
+   "scope": "article",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.article-contents": 131,
+    "tag:aside @ aside.share-call": 173
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://www.broadinstitute.org/news/clinical-trial-prion-disease-drug-candidate-begins-enrolling-participants",
+   "kept": 5968,
+   "shipped": 5968,
+   "drop_in_root": 2141,
+   "drop_out_root": 8797,
+   "ratio": 0.2640276236280676,
+   "ate": false,
+   "scope": "main>div.node__content",
+   "rung": "strict",
+   "by_label": {
+    "class:breadcrumb @ div.block": 18,
+    "class:sidebar @ div.paragraph": 2111,
+    "tag:nav @ nav.slick__arrow": 12
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://gizmodo.com/youtuber-says-cops-paid-him-a-visit-after-he-built-flock-style-camera-to-track-cops-2000824306",
+   "kept": 5036,
+   "shipped": 5036,
+   "drop_in_root": 735,
+   "drop_out_root": 397,
+   "ratio": 0.12736094264425576,
+   "ate": false,
+   "scope": "main",
+   "rung": "strict",
+   "by_label": {
+    "tag:aside @ aside.flex-none": 735
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://alexwang.ai/posts/put-a-price-on-breakthroughs/",
+   "kept": 10131,
+   "shipped": 10131,
+   "drop_in_root": 0,
+   "drop_out_root": 16,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.c-article__content",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://shrub.industries/words/problem.html",
+   "kept": 18168,
+   "shipped": 18168,
+   "drop_in_root": 0,
+   "drop_out_root": 152,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.manual-text",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://oss.lsantos.dev/proton-drive-linux-fs/",
+   "kept": 1967,
+   "shipped": 1967,
+   "drop_in_root": 795,
+   "drop_out_root": 924,
+   "ratio": 0.28783490224475017,
+   "ate": false,
+   "scope": "main>article.md-content__inner",
+   "rung": "strict",
+   "by_label": {
+    "class:sidebar @ div.md-sidebar": 795
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://www.nbcphiladelphia.com/news/local/anthropic-ai-model-submits-false-tip-on-unsolved-philly-murder-police-say/4477051/",
+   "kept": 3968,
+   "shipped": 3968,
+   "drop_in_root": 2679,
+   "drop_out_root": 849,
+   "ratio": 0.40303896494659247,
+   "ate": false,
+   "scope": "main>div.article-content--wrap",
+   "rung": "strict",
+   "by_label": {
+    "tag:aside @ aside.sidebar": 2679
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://oxide.computer/blog/our-445m-series-d",
+   "kept": 4174,
+   "shipped": 4174,
+   "drop_in_root": 0,
+   "drop_out_root": 401,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div#content",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://phenomenalworld.org/analysis/has-the-autonomous-trucking-revolution-arrived/",
+   "kept": 22956,
+   "shipped": 22956,
+   "drop_in_root": 412,
+   "drop_out_root": 39206,
+   "ratio": 0.01763094830537487,
+   "ate": false,
+   "scope": "main>div.d-grid",
+   "rung": "strict",
+   "by_label": {
+    "class:newsletter @ header.alignfull": 412
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://www.nature.com/articles/s41598-020-73426-0",
+   "kept": 209,
+   "shipped": 209,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://atarimuseum.nl/atari-falcon/",
+   "kept": 51,
+   "shipped": 51,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://terrytao.wordpress.com/2026/10/09/what-mathematicians-should-know-about-the-lean-theorem-proverquestions-of-reliability-and-ai/",
+   "kept": 33121,
+   "shipped": 33121,
+   "drop_in_root": 0,
+   "drop_out_root": 2,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://www.primeintellect.ai/blog/prime-agent-rust",
+   "kept": 14229,
+   "shipped": 14229,
+   "drop_in_root": 857,
+   "drop_out_root": 316,
+   "ratio": 0.056807636219011005,
+   "ate": false,
+   "scope": "main>section.blog-prose",
+   "rung": "strict",
+   "by_label": {
+    "aria-hidden @ div.flex": 81,
+    "aria-hidden @ span.font-mono": 102,
+    "tag:footer @ footer.mt-12": 674
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://readrare.com/",
+   "kept": 2513,
+   "shipped": 2513,
+   "drop_in_root": 0,
+   "drop_out_root": 21,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "empty-root",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://animationobsessive.substack.com/p/wallace-and-gromit-90-alone",
+   "kept": 20201,
+   "shipped": 20201,
+   "drop_in_root": 20,
+   "drop_out_root": 35,
+   "ratio": 0.0009890707680134513,
+   "ate": false,
+   "scope": "div[role=main]",
+   "rung": "strict",
+   "by_label": {
+    "role=navigation @ div.pencraft": 20
+   }
+  },
+  {
+   "src": "hn",
+   "url": "https://publicdomainreview.org/collection/mutus-liber/",
+   "kept": 8354,
+   "shipped": 8354,
+   "drop_in_root": 0,
+   "drop_out_root": 1446,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "div[role=main]",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://iminafleeting.com/",
+   "kept": 2194,
+   "shipped": 2194,
+   "drop_in_root": 0,
+   "drop_out_root": 82,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "hn",
+   "url": "https://proofsandprompts.com/2026/10/08/100-reactions-to-100-solutions/",
+   "kept": 123206,
+   "shipped": 123206,
+   "drop_in_root": 136,
+   "drop_out_root": 158,
+   "ratio": 0.0011026252209304212,
+   "ate": false,
+   "scope": "main>div.wp-block-column",
+   "rung": "strict",
+   "by_label": {
+    "aria-hidden @ span.wp-block-post-navigation-link__arrow-previous": 1,
+    "aria-hidden @ span.wp-block-post-navigation-link__arrow-next": 1,
+    "tag:footer @ footer.wp-block-latest-comments__comment-meta": 134
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://blog.glyph.im/2026/10/programming-isnt-special.html",
+   "kept": 10743,
+   "shipped": 10743,
+   "drop_in_root": 0,
+   "drop_out_root": 34,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "div[role=main]>body",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://blueberrywren.dev/blog/primes/",
+   "kept": 47507,
+   "shipped": 47507,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://mtlynch.io/why-are-coding-agents-so-dumb/",
+   "kept": 13481,
+   "shipped": 13481,
+   "drop_in_root": 235,
+   "drop_out_root": 0,
+   "ratio": 0.017133275007290755,
+   "ate": false,
+   "scope": "main>div",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.navigation": 61,
+    "aria-hidden @ span.lobsters-icon": 1,
+    "tag:footer @ footer.footer": 173
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://www.python.org/downloads/release/python-3150/",
+   "kept": 6235,
+   "shipped": 6235,
+   "drop_in_root": 0,
+   "drop_out_root": 1801,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "section[role=main]>article.text",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://www.unison-lang.org/blog/unison-cloud-open-source/",
+   "kept": 1769,
+   "shipped": 1769,
+   "drop_in_root": 1171,
+   "drop_out_root": 0,
+   "ratio": 0.3982993197278912,
+   "ate": false,
+   "scope": "main>article.unison-doc",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav#main-nav": 996,
+    "tag:footer @ footer#main-footer": 175
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://borretti.me/article/no-man-is-an-island",
+   "kept": 8728,
+   "shipped": 8728,
+   "drop_in_root": 0,
+   "drop_out_root": 206,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>article",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://earendil.com/posts/system-theme/",
+   "kept": 15764,
+   "shipped": 15764,
+   "drop_in_root": 0,
+   "drop_out_root": 65,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.letter-body",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://github.com/Facebook/lifeguard",
+   "kept": 11130,
+   "shipped": 11130,
+   "drop_in_root": 290,
+   "drop_out_root": 1743,
+   "ratio": 0.025394045534150613,
+   "ate": false,
+   "scope": "main>div.prc-PageLayout-PageLayoutContent-BneH9",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.styles-module__contextRegion__VbSp2": 17,
+    "tag:nav @ nav.prc-components-UnderlineWrapper-eT-Yj": 140,
+    "aria-hidden @ span#_R_sqbahlik5_": 53,
+    "aria-hidden @ span.ml-1": 5,
+    "aria-hidden @ span#_R_1cqbahlik5_": 42,
+    "aria-hidden @ span#_R_3sidahlik5_": 22,
+    "aria-hidden @ span#_R_2bacdahlik5_": 11
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://00f.net/2026/10/09/llvm-compiles-branch-free-code-into-branches-on-risc-v/",
+   "kept": 7049,
+   "shipped": 7049,
+   "drop_in_root": 304,
+   "drop_out_root": 69,
+   "ratio": 0.041343669250646,
+   "ate": false,
+   "scope": "main>div.post-content",
+   "rung": "strict",
+   "by_label": {
+    "tag:aside @ aside.related-posts": 289,
+    "tag:nav @ nav.site-nav": 15
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://theconsensus.dev/p/2026/10/08/deepthi-sigireddi-from-supabase.html",
+   "kept": 9264,
+   "shipped": 9264,
+   "drop_in_root": 1949,
+   "drop_out_root": 532,
+   "ratio": 0.1738161063051815,
+   "ate": false,
+   "scope": "main>article.post",
+   "rung": "strict",
+   "by_label": {
+    "tag:aside @ aside.card": 240,
+    "tag:aside @ aside.post-author": 303,
+    "class:sidebar @ div.sidebar": 1406
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://robotgirlgang.com/2026/10/08/robot-is-a-social-construct-why-your-dishwasher-is-not-a-robot/",
+   "kept": 6113,
+   "shipped": 6113,
+   "drop_in_root": 0,
+   "drop_out_root": 105,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.entry-content",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://purplesyringa.moe/blog/vectorized-clz-and-ctz/",
+   "kept": 5351,
+   "shipped": 5351,
+   "drop_in_root": 0,
+   "drop_out_root": 55,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://carette.xyz/posts/minimal_swift_kernel_on_qemu/",
+   "kept": 12313,
+   "shipped": 12313,
+   "drop_in_root": 0,
+   "drop_out_root": 63,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main>div.single-content",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://bevy.org/news/bevy-0-20/",
+   "kept": 0,
+   "shipped": 0,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "empty-root",
+   "rung": "no-chrome",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://matklad.github.io/2020/01/02/spinlocks-considered-harmful.html",
+   "kept": 14384,
+   "shipped": 14384,
+   "drop_in_root": 338,
+   "drop_out_root": 70,
+   "ratio": 0.022958837114522485,
+   "ate": false,
+   "scope": "main>article",
+   "rung": "strict",
+   "by_label": {
+    "tag:aside @ aside.admn": 338
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://hpc.guix.info/blog/2026/10/hip-and-rocm-as-first-class-citizens/",
+   "kept": 9360,
+   "shipped": 9360,
+   "drop_in_root": 0,
+   "drop_out_root": 0,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "article>div.post",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://mcmah309.github.io/posts/the-missing-piece-in-rust-error-handling/",
+   "kept": 10889,
+   "shipped": 10889,
+   "drop_in_root": 97,
+   "drop_out_root": 136,
+   "ratio": 0.008829419260877481,
+   "ate": false,
+   "scope": "main>div.e-content",
+   "rung": "strict",
+   "by_label": {
+    "class:sidebar @ div.page-sidebar": 47,
+    "tag:nav @ nav.page-pagination": 50
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://letsencrypt.org/2026/10/07/64-day-certs.html",
+   "kept": 2809,
+   "shipped": 2809,
+   "drop_in_root": 0,
+   "drop_out_root": 1531,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "main",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://lumi.codeberg.page/blog/software-community.html",
+   "kept": 3800,
+   "shipped": 3800,
+   "drop_in_root": 0,
+   "drop_out_root": 100,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://sheets.works/data-viz/holding-up-the-internet",
+   "kept": 16181,
+   "shipped": 16181,
+   "drop_in_root": 0,
+   "drop_out_root": 125,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "lobsters",
+   "url": "https://blog.scrt.ch/2026/10/06/a-practical-guide-to-plugpwn-for-pentesters-and-defenders/",
+   "kept": 30107,
+   "shipped": 30107,
+   "drop_in_root": 217,
+   "drop_out_root": 404,
+   "ratio": 0.007156048014773777,
+   "ate": false,
+   "scope": "main>div.entry-content",
+   "rung": "strict",
+   "by_label": {
+    "tag:footer @ footer.entry-footer": 112,
+    "tag:nav @ nav.navigation": 105
+   }
+  },
+  {
+   "src": "lobsters",
+   "url": "https://casuarina.org/news/ending-the-casuarina-linux-experiment/",
+   "kept": 4743,
+   "shipped": 4743,
+   "drop_in_root": 0,
+   "drop_out_root": 131,
+   "ratio": 0.0,
+   "ate": false,
+   "scope": "",
+   "rung": "strict",
+   "by_label": {}
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Yinuo_Li",
+   "kept": 3834,
+   "shipped": 3834,
+   "drop_in_root": 387,
+   "drop_out_root": 976,
+   "ratio": 0.09168443496801706,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 10,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Eastern_massasauga",
+   "kept": 18113,
+   "shipped": 18113,
+   "drop_in_root": 676,
+   "drop_out_root": 1125,
+   "ratio": 0.03597849805737399,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 12,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 310,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwAw4": 259
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Rusticated_concrete_block",
+   "kept": 5071,
+   "shipped": 5071,
+   "drop_in_root": 407,
+   "drop_out_root": 1053,
+   "ratio": 0.07429718875502007,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 13,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 299,
+    "tag:nav @ nav.vector-appearance-landmark": 29
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Devi_Priya",
+   "kept": 4537,
+   "shipped": 4537,
+   "drop_in_root": 457,
+   "drop_out_root": 993,
+   "ratio": 0.09150981177412895,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mw9w": 69
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Kanchenjungha",
+   "kept": 7248,
+   "shipped": 7248,
+   "drop_in_root": 2964,
+   "drop_out_root": 1020,
+   "ratio": 0.2902467685076381,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwng": 2576
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Parish_of_Coyurunda",
+   "kept": 1395,
+   "shipped": 1395,
+   "drop_in_root": 393,
+   "drop_out_root": 910,
+   "ratio": 0.2197986577181208,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 13,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "class:navbar @ div.navbar": 3
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Callostracon_amabile",
+   "kept": 3687,
+   "shipped": 3687,
+   "drop_in_root": 512,
+   "drop_out_root": 949,
+   "ratio": 0.12193379376041914,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwVA": 124
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Euomphalidae",
+   "kept": 2559,
+   "shipped": 2559,
+   "drop_in_root": 593,
+   "drop_out_root": 923,
+   "ratio": 0.18813451776649745,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 310,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwvw": 174,
+    "class:navbar @ div.navbar": 3
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Wildbach_%28Main%29",
+   "kept": 2032,
+   "shipped": 2032,
+   "drop_in_root": 408,
+   "drop_out_root": 919,
+   "ratio": 0.16721311475409836,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 299,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "class:navbar @ div.navbar": 3
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/T%C3%AAgey%C5%9Ftin%C3%AE_Rast%C3%AE",
+   "kept": 1661,
+   "shipped": 1661,
+   "drop_in_root": 405,
+   "drop_out_root": 914,
+   "ratio": 0.19603097773475314,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 299,
+    "tag:nav @ nav.vector-appearance-landmark": 29
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Tom%C3%A1s_Fern%C3%A1ndez_R%C3%ADos",
+   "kept": 1639,
+   "shipped": 1639,
+   "drop_in_root": 388,
+   "drop_out_root": 922,
+   "ratio": 0.1914158855451406,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/List_of_Teochew_people",
+   "kept": 16595,
+   "shipped": 16595,
+   "drop_in_root": 390,
+   "drop_out_root": 1052,
+   "ratio": 0.022961436561672065,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 13,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Borja_Rubiato",
+   "kept": 1104,
+   "shipped": 1104,
+   "drop_in_root": 405,
+   "drop_out_root": 934,
+   "ratio": 0.268389662027833,
+   "ate": false,
+   "scope": "main>section#mwAQ",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 299,
+    "tag:nav @ nav.vector-appearance-landmark": 29
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Miguel_Maury_Buend%C3%ADa",
+   "kept": 6711,
+   "shipped": 6711,
+   "drop_in_root": 2876,
+   "drop_out_root": 965,
+   "ratio": 0.2999895692083029,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 12,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 308,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwAQs": 2353,
+    "role=navigation @ div#mwAQ0": 33,
+    "role=navigation @ div#mwAQ8": 75
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Zacatecas_%28disambiguation%29",
+   "kept": 60,
+   "shipped": 60,
+   "drop_in_root": 389,
+   "drop_out_root": 918,
+   "ratio": 0.8663697104677061,
+   "ate": true,
+   "scope": "main>section#mwAQ",
+   "rung": "trunc-root:87%",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 12,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Caladenia_caesarea",
+   "kept": 4843,
+   "shipped": 4843,
+   "drop_in_root": 1866,
+   "drop_out_root": 965,
+   "ratio": 0.27813385005216873,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 310,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div.navbox": 1450
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Kulstadholmane",
+   "kept": 3296,
+   "shipped": 3296,
+   "drop_in_root": 391,
+   "drop_out_root": 921,
+   "ratio": 0.10604827773257391,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 11,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 282,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "class:navbar @ div.navbar": 3
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Torrebaja",
+   "kept": 2752,
+   "shipped": 5925,
+   "drop_in_root": 4400,
+   "drop_out_root": 914,
+   "ratio": 0.6152125279642058,
+   "ate": true,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "trunc-root:62%",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 12,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 299,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwIQ": 1223,
+    "role=navigation @ div#mwIw": 2711,
+    "role=navigation @ div#mwJQ": 57,
+    "class:navbar @ div.navbar": 3
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Tehuantepec_jackrabbit",
+   "kept": 16723,
+   "shipped": 16723,
+   "drop_in_root": 5288,
+   "drop_out_root": 1103,
+   "ratio": 0.2402435146063332,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 12,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 310,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwA0Y": 4578,
+    "role=navigation @ div#mwA0g": 293
+   }
+  },
+  {
+   "src": "wikirandom",
+   "url": "https://en.wikipedia.org/wiki/Holy_Cross_Crusaders_women%27s_basketball",
+   "kept": 5338,
+   "shipped": 5338,
+   "drop_in_root": 3117,
+   "drop_out_root": 1202,
+   "ratio": 0.3686575990538143,
+   "ate": false,
+   "scope": "main>div.mw-content-ltr",
+   "rung": "strict",
+   "by_label": {
+    "tag:nav @ nav.vector-toc-landmark": 28,
+    "aria-hidden @ label#p-lang-btn-label": 13,
+    "tag:nav @ nav": 38,
+    "tag:nav @ nav.vector-page-tools-landmark": 299,
+    "tag:nav @ nav.vector-appearance-landmark": 29,
+    "role=navigation @ div#mwAac": 1686,
+    "role=navigation @ div#mwAak": 459,
+    "role=navigation @ div#mwAas": 565
+   }
+  }
+ ],
+ "skipped": [
+  {
+   "src": "hn",
+   "url": "https://twitter.com/WallStreetApes/status/2108594998656807078",
+   "why": "not html"
+  },
+  {
+   "src": "hn",
+   "url": "https://www.bloomberg.com/news/articles/2026-10-09/data-center-darling-s-30-billion-ipo-dream-crushed-in-48-hours",
+   "why": "not html"
+  },
+  {
+   "src": "lobsters",
+   "url": "https://blog.sigplan.org/2026/10/01/equality-saturation-an-incomplete-project/",
+   "why": "URLError: <urlopen error [WinError 10054] Se ha forzado la interrupci\u00f3"
+  }
+ ]
+}
