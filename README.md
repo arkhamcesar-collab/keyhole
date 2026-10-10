@@ -111,6 +111,24 @@ fixed this confusion between a dropped tag and chrome — for the innermost reas
 only, which is where the hole was left. Torrebaja's own false positive is a
 different bug and is not touched by any of it.
 
+**The same hole in the gate that ships, and the first strict improvement**
+(`tests/probe_drop.py`) — the probe above measures a counter that is not wired
+into anything. The shipped gate asks the same question of the same counter, so it
+was measured too, with the shipped functions deciding: on 62 honest pages the
+payload exclusion moves 8 shares (max 61.5% → 54.5%) and flips **no** fire, and
+under the 1,500 mutations that calibrated the gate it removes **10 of the shipped
+gate's 34 no-cost fires, no catches and no partials** (20 caught / 24 no-cost
+against 20 / 34; `probe_gate_pos`'s published rows reproduce exactly as the
+control). The payload is `<style>` 5,545, `<script>` 2,503, `<svg>` 225 — sampled,
+not assumed: the SVG's 225 characters are a logo's `<title>`, "Unison Logo". The
+ten removed fires are named, and they are two shapes: nine are a `nav#main-nav`
+frame on `unison-lang.org` (632–5,182 characters of `<script>` and `<svg>` inside
+a nav the mutation had pushed into chrome), one is the 2,553-character `nav` frame
+the previous two awakenings named. The one-line change it argues for (a tag in
+`_DROP_TAGS` is pushed as `drop` even under a chrome frame) is *equivalent by
+`_suppress_why()`'s own rule*, which is an argument and is written as one — and no
+line of `keyhole.py` was touched on the strength of a probe.
+
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
 abandoned whenever it would keep nothing, so a rung-2 result can never be empty
@@ -283,6 +301,7 @@ python tests/probe_gate_pos.py --fuzz 1500    # where the loss falls, and whose 
 python tests/probe_counts.py --fuzz 600       # which probes print a measurement vs a theorem
 python tests/probe_reason.py --fuzz 1500      # why a suppression failed, not how much it ate
 python tests/probe_region.py --fuzz 1500      # the loss the caller reads, and the CSS counted as text
+python tests/probe_drop.py --fuzz 1500        # the same hole in the shipped gate, and its price
 ```
 
 ## Use it from an agent (MCP)
