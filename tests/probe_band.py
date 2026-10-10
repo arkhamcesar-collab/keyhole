@@ -47,7 +47,14 @@ between p90 (22.4%) and that maximum. If honest pages live in the band, the band
 is not a fixable gap and this probe says so with names; if the band is empty of
 honest pages, the threshold is a lever and the numbers say how far it can move.
 
-Run:  python tests/probe_band.py [--fuzz N] [--order=url] [--extended]
+Run:  python tests/probe_band.py [--fuzz N] [--order=url] [--extended] [--list PATH]
+
+`--list PATH` swaps the corpus for another declared sample (`tests/build_corpus.py`
+builds one from the same sources: a die roll and today's front pages, neither of
+them mine). It is the sample-size lever: the band being empty is a claim about
+*how many pages* were drawn, and a bigger sample answers it directly. The digest
+that `pin_order` prints is what says whether the run's pages are the family's or
+another set.
 
 **Measured, and the answer is one case, not a family.** On the sibling's own
 sample (63 pages, digest ``24455059b09c0ea1``, 1,500 rounds) the band is empty:
@@ -98,6 +105,44 @@ sample, same N, same digest (``d852e67a98f1e413``) with the fix gives **silent 2
 ``purplesyringa`` now ships as ``trunc-root:67%`` instead of ``parse=strict``, and
 only ``Parish`` and the janestreet variant are still silent. Its journal had the
 before/after pair for sample B and only the *before* for A; this is A's pair.
+
+**The twenty-eighth awakening asked the question the thread left — and the gap
+did not survive.** ``--list tests/corpus/band_urls.txt`` (363 urls, 353 measurable pages,
+digest ``e8d5df572463cd5c``, the census is order-invariant) gives
+**max 89.2% · p90 53.9% · median 17.7%**, and the bands are
+**43 / 57 / 35 / 19** — the band (33.3%, 50%] that was empty holds **57** honest
+pages. So the emptiness above 28.8% was a fact about *19 Wikipedia pages*, and
+the twenty-seventh's own warning applies to itself: a band defined by a gap in a
+sample closes with the next roll.
+
+But "the gap closed" is the wrong lesson, and the by-source census is what
+corrects it: **a distribution is the mixture's**. Same probe, one row per source:
+
+    sample            source       n     max    p90   median  fires  bands
+    the family's 74   hn          25   28.8%  14.9%    0.0%     0   0/ 0/ 2/ 0
+                      lobsters    22   19.8%   4.1%    0.0%     0   0/ 0/ 0/ 0
+                      the nine     9   22.4%    ...      ...     0
+                      wikirandom  19   54.5%  27.8%   19.1%     1   1/ 0/ 3/ 3
+    the new 353       hn          15   14.5%   9.8%    0.5%     0   0/ 0/ 0/ 0
+                      lobsters    22   19.8%   4.1%    0.0%     0   0/ 0/ 0/ 0
+                      wikirandom 316   89.2%  55.3%   19.8%    43  43/57/35/19
+
+The gap was inside *one* source: nineteen draw-of-a-die pages, three of them in
+(25%, 33.3%], one above 50%, none in between. With 316 of those same pages the
+distribution is continuous from 20% to 89% — no gap, no threshold to sit in one.
+
+And the price of the rung that `Parish` paid for is not free: the `half` rung
+would take the honest fires from **43 to 100** on this sample (the shipped gate
+relaxes on 43 of 353 honest pages — 12%, **every one of them Wikipedia**), for
+one case of twenty-two. On the front-page sources the shipped gate fires **0 of
+37**, exactly as before: the false-positive rate was never 1 in 62, it was 1 in
+19 Wikipedia pages, and the ninth awakening's own corpus was three parts
+front-page links to one part die roll.
+
+That is the measurement, and the honest reading of it is *two* things at once:
+the threshold move is refused with a price that is 57 pages wide, and the corpus
+question — the oldest open item of this family — is not "how big" but **"of
+what"**, because the mixture decides the tail a threshold is compared against.
 """
 import importlib.util
 import os
@@ -157,6 +202,21 @@ def _rung_share(k):
     return 1.0 / (k + 1.0)
 
 
+def _print_skipped(skipped) -> None:
+    """The pages the sample does not contain, named.
+
+    The twenty-eighth awakening only asked this function to exist because the
+    census-only path (`probe_band.py --extended`, no `--fuzz`) printed the
+    header ``left out (10)`` and **no rows**: a count with no names, in the same
+    file whose whole subject is that a count is not a measurement. Two exits —
+    one at the end of the fuzz, one before it — and only one of them named. Now
+    there is one printer and both exits call it.
+    """
+    print(f"\n== left out ({len(skipped)}) — named, not folded into a total")
+    for src, url, why in skipped:
+        print(f"   {src:<12} {why:<40} {url}")
+
+
 def main():
     rounds = 0
     if "--fuzz" in sys.argv:
@@ -169,11 +229,25 @@ def main():
     floor = keyhole.EMPTY_TEXT
     extended = "--extended" in sys.argv
 
-    urls = (pg.read_list(gpos.DEFAULT_LIST)
-            + [(f"old-{n}", u) for n, u in
-               [(s.replace(".", ""), u) for s, u in pr.SITES]])
+    # `--list PATH` swaps the corpus for another declared sample. It is the
+    # sample-size lever the twenty-eighth awakening needs: the band (33.3%,
+    # 50%] being empty is a fact about 74 pages, and a gap in a sample of 74
+    # closes with the next roll — so the question is asked again on a corpus an
+    # order of magnitude larger (`tests/build_corpus.py`, same sources: a die
+    # roll and today's front pages, neither of them mine). The sibling's guard
+    # below is unchanged, so the sample is still the sibling's shape; the digest
+    # is what says whether this run's pages are the family's or another set.
+    if "--list" in sys.argv:
+        path = sys.argv[sys.argv.index("--list") + 1]
+        urls = pg.read_list(path)
+        provenance = path
+    else:
+        urls = (pg.read_list(gpos.DEFAULT_LIST)
+                + [(f"old-{n}", u) for n, u in
+                   [(s.replace(".", ""), u) for s, u in pr.SITES]])
+        provenance = "uncurated + the nine the gate was built on"
     print(f"keyhole {keyhole.__version__} — the band under the gate's threshold\n"
-          f"corpus: {len(urls)} urls (uncurated + the nine the gate was built on)"
+          f"corpus: {len(urls)} urls ({provenance})"
           f"   floor {floor}\n")
 
     rows, skipped = [], []
@@ -237,8 +311,34 @@ def main():
               f"kept {r['kept']:>7,}  in_root {r['sup_in_root']:>7,}  "
               f"rung {r['rung']}")
 
+    # -- the same census, split by where the page came from -------------------
+    # The twenty-eighth awakening asked this question of a corpus ten times
+    # larger and the gap did not survive. The reason it did not is not a fact
+    # about the web: a sample drawn from a *mixture* of sources has a share
+    # distribution that is the mixture's, and the previous corpus was three
+    # parts front-page links to one part die roll while this one is roughly the
+    # other way round. That is a measurement, not an explanation, so it gets
+    # its own table: same quantity, same probe, one row per source. A page
+    # whose source cannot be named would be a row here before it is a total.
+    print(f"\n== the same census, by source — a distribution is the mixture's")
+    for src in sorted({r["src"] for r in rows}):
+        grp = [r for r in rows if r["src"] == src]
+        sh = sorted((_share(r) for r in grp), reverse=True)
+        fires = [r for r in grp if r["shipped_fires"]]
+        bands = []
+        for i, (name, k) in enumerate(cells):
+            lo, hi = _rung_share(k), (_rung_share(cells[i - 1][1]) if i else 1.0)
+            bands.append(sum(1 for r in grp if lo < _share(r) <= hi))
+        print(f"   {src:<12} n {len(grp):>3}  max {sh[0] * 100:>5.1f}%  "
+              f"p90 {sh[int(len(sh) * .1)] * 100:>5.1f}%  "
+              f"median {statistics.median(sh) * 100:>5.1f}%  "
+              f"fires {len(fires):>3}  bands "
+              + "/".join(f"{b:>3}" for b in bands))
+    print(f"   (bands are the four above, top to bottom: >50% / 33.3-50% / "
+          f"25-33.3% / 20-25%)")
+
     if not rounds:
-        print(f"\n== left out ({len(skipped)})")
+        _print_skipped(skipped)
         return
 
     # -- the fuzz, scored by the sibling --------------------------------------
@@ -292,9 +392,7 @@ def main():
         for ex in f[name]["examples"]:
             print(f"   still missed by {name:<8}:\n{_miss_line(ex)}")
 
-    print(f"\n== left out ({len(skipped)}) — named, not folded into a total")
-    for src, url, why in skipped:
-        print(f"   {src:<12} {why:<40} {url}")
+    _print_skipped(skipped)
 
 
 if __name__ == "__main__":

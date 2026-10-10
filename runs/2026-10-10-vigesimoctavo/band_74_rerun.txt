@@ -1,0 +1,61 @@
+keyhole 0.7.0 — the band under the gate's threshold
+corpus: 82 urls (uncurated + the nine the gate was built on)   floor 200
+
+   page order: 74 pages by shipped_share — the number under test   sample digest da7a4efa7f309d0d
+
+== the honest corpus: where its own shares fall (74 pages)
+   the thresholds a share has to cross:  shipped 50.0%   half 33.3%   third 25.0%   quarter 20.0%
+   shipped  fires  1  wikirandom 54.5%
+   half     fires  1  wikirandom 54.5%
+   third    fires  6  wikirandom 54.5%, hn 28.8%, wikirandom 27.8%, wikirandom 27.3%, wikirandom 26.8%, hn 26.4%
+   quarter  fires 10  wikirandom 54.5%, hn 28.8%, wikirandom 27.8%, wikirandom 27.3%, wikirandom 26.8%, hn 26.4%, old-npm 22.4%, wikirandom 22.0%, wikirandom 20.8%, wikirandom 20.4%
+   band (50.0%, 100.0%]:  1 honest page(s)  <-- the price of that rung
+     wikirandom   share  54.5%  kept   2,752  in_root   3,291  https://en.wikipedia.org/wiki/Torrebaja
+   band (33.3%, 50.0%]:  0 honest page(s)
+   band (25.0%, 33.3%]:  5 honest page(s)  <-- the price of that rung
+     hn           share  28.8%  kept   1,967  in_root     795  https://oss.lsantos.dev/proton-drive-linux-fs/
+     wikirandom   share  27.8%  kept   4,843  in_root   1,866  https://en.wikipedia.org/wiki/Caladenia_caesarea
+     wikirandom   share  27.3%  kept   5,338  in_root   2,008  https://en.wikipedia.org/wiki/Holy_Cross_Crusaders_women%27s_basketball
+     wikirandom   share  26.8%  kept   1,104  in_root     405  https://en.wikipedia.org/wiki/Borja_Rubiato
+     hn           share  26.4%  kept   5,968  in_root   2,141  https://www.broadinstitute.org/news/clinical-trial-prion-disease-drug-candidate-begins-enrolling-participants
+   band (20.0%, 25.0%]:  4 honest page(s)  <-- the price of that rung
+     old-npm      share  22.4%  kept   1,042  in_root     300  https://www.npmjs.com/package/react
+     wikirandom   share  22.0%  kept   1,395  in_root     393  https://en.wikipedia.org/wiki/Parish_of_Coyurunda
+     wikirandom   share  20.8%  kept   6,711  in_root   1,767  https://en.wikipedia.org/wiki/Miguel_Maury_Buend%C3%ADa
+     wikirandom   share  20.4%  kept   7,248  in_root   1,855  https://en.wikipedia.org/wiki/Kanchenjungha
+   share distribution:  max 54.5%  p90 22.0%  median 0.8%  p10 0.0%
+   worst ten pages by share:
+     wikirandom   share  54.5%  kept   2,752  in_root   3,291  rung trunc-root:54%
+     hn           share  28.8%  kept   1,967  in_root     795  rung strict
+     wikirandom   share  27.8%  kept   4,843  in_root   1,866  rung strict
+     wikirandom   share  27.3%  kept   5,338  in_root   2,008  rung strict
+     wikirandom   share  26.8%  kept   1,104  in_root     405  rung strict
+     hn           share  26.4%  kept   5,968  in_root   2,141  rung strict
+     old-npm      share  22.4%  kept   1,042  in_root     300  rung strict
+     wikirandom   share  22.0%  kept   1,395  in_root     393  rung strict
+     wikirandom   share  20.8%  kept   6,711  in_root   1,767  rung strict
+     wikirandom   share  20.4%  kept   7,248  in_root   1,855  rung strict
+
+== the same census, by source — a distribution is the mixture's
+   hn           n  25  max  28.8%  p90  14.9%  median   0.0%  fires   0  bands   0/  0/  2/  0
+   lobsters     n  22  max  19.8%  p90   4.1%  median   0.0%  fires   0  bands   0/  0/  0/  0
+   old-blogrust n   1  max   0.0%  p90   0.0%  median   0.0%  fires   0  bands   0/  0/  0/  0
+   old-docspy   n   1  max   0.0%  p90   0.0%  median   0.0%  fires   0  bands   0/  0/  0/  0
+   old-github   n   1  max   9.2%  p90   9.2%  median   9.2%  fires   0  bands   0/  0/  0/  0
+   old-hn       n   1  max   0.0%  p90   0.0%  median   0.0%  fires   0  bands   0/  0/  0/  0
+   old-mdn      n   1  max   0.7%  p90   0.7%  median   0.7%  fires   0  bands   0/  0/  0/  0
+   old-npm      n   1  max  22.4%  p90  22.4%  median  22.4%  fires   0  bands   0/  0/  0/  1
+   old-peps     n   1  max   1.3%  p90   1.3%  median   1.3%  fires   0  bands   0/  0/  0/  0
+   old-wikipedia n   1  max   0.6%  p90   0.6%  median   0.6%  fires   0  bands   0/  0/  0/  0
+   wikirandom   n  19  max  54.5%  p90  27.8%  median  19.1%  fires   1  bands   1/  0/  3/  3
+   (bands are the four above, top to bottom: >50% / 33.3-50% / 25-33.3% / 20-25%)
+
+== left out (8) — named, not folded into a total
+   hn           no region (0 kept, scope empty-root)     https://minesweeper.mikelacher.com/
+   hn           no region (0 kept, scope empty-root)     https://beaksec.github.io/posts/telegram-desktop-one-click-account-takeover/
+   hn           not html                                 https://twitter.com/WallStreetApes/status/2108594998656807078
+   hn           no region (51 kept, scope none)          https://atarimuseum.nl/atari-falcon/
+   hn           not html                                 https://www.bloomberg.com/news/articles/2026-10-09/data-center-darling-s-30-billion-ipo-dream-crushed-in-48-hours
+   lobsters     no region (0 kept, scope empty-root)     https://bevy.org/news/bevy-0-20/
+   wikirandom   no region (60 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/Zacatecas_%28disambiguation%29
+   old-example  no region (156 kept, scope none)         https://example.com

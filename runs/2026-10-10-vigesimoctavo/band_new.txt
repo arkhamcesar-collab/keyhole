@@ -1,0 +1,199 @@
+keyhole 0.7.0 — the band under the gate's threshold
+corpus: 363 urls (tests/corpus/band_urls.txt)   floor 200
+
+   page order: 353 pages by shipped_share — the number under test   sample digest e8d5df572463cd5c
+
+== the honest corpus: where its own shares fall (353 pages)
+   the thresholds a share has to cross:  shipped 50.0%   half 33.3%   third 25.0%   quarter 20.0%
+   shipped  fires 43  wikirandom 89.2%, wikirandom 80.2%, wikirandom 79.4%, wikirandom 78.9%, wikirandom 77.2%, wikirandom 76.6%, wikirandom 76.4%, wikirandom 73.5%, wikirandom 71.9%, wikirandom 70.4%, wikirandom 70.1%, wikirandom 70.1%, wikirandom 69.3%, wikirandom 68.2%, wikirandom 66.9%, wikirandom 62.0%, wikirandom 61.8%, wikirandom 61.0%, wikirandom 60.3%, wikirandom 59.6%, wikirandom 58.8%, wikirandom 58.7%, wikirandom 58.6%, wikirandom 58.1%, wikirandom 58.1%, wikirandom 58.0%, wikirandom 57.7%, wikirandom 57.0%, wikirandom 56.5%, wikirandom 56.1%, wikirandom 55.9%, wikirandom 55.3%, wikirandom 54.9%, wikirandom 54.4%, wikirandom 54.2%, wikirandom 53.9%, wikirandom 53.9%, wikirandom 53.6%, wikirandom 53.3%, wikirandom 52.6%, wikirandom 51.3%, wikirandom 51.0%, wikirandom 50.3%
+   half     fires 100  wikirandom 89.2%, wikirandom 80.2%, wikirandom 79.4%, wikirandom 78.9%, wikirandom 77.2%, wikirandom 76.6%, wikirandom 76.4%, wikirandom 73.5%, wikirandom 71.9%, wikirandom 70.4%, wikirandom 70.1%, wikirandom 70.1%, wikirandom 69.3%, wikirandom 68.2%, wikirandom 66.9%, wikirandom 62.0%, wikirandom 61.8%, wikirandom 61.0%, wikirandom 60.3%, wikirandom 59.6%, wikirandom 58.8%, wikirandom 58.7%, wikirandom 58.6%, wikirandom 58.1%, wikirandom 58.1%, wikirandom 58.0%, wikirandom 57.7%, wikirandom 57.0%, wikirandom 56.5%, wikirandom 56.1%, wikirandom 55.9%, wikirandom 55.3%, wikirandom 54.9%, wikirandom 54.4%, wikirandom 54.2%, wikirandom 53.9%, wikirandom 53.9%, wikirandom 53.6%, wikirandom 53.3%, wikirandom 52.6%, wikirandom 51.3%, wikirandom 51.0%, wikirandom 50.3%, wikirandom 49.7%, wikirandom 49.5%, wikirandom 49.4%, wikirandom 48.4%, wikirandom 47.7%, wikirandom 47.6%, wikirandom 47.3%, wikirandom 47.2%, wikirandom 46.9%, wikirandom 46.4%, wikirandom 46.3%, wikirandom 46.2%, wikirandom 45.9%, wikirandom 45.5%, wikirandom 45.5%, wikirandom 45.4%, wikirandom 45.3%, wikirandom 45.3%, wikirandom 45.2%, wikirandom 45.1%, wikirandom 45.0%, wikirandom 44.6%, wikirandom 44.4%, wikirandom 44.0%, wikirandom 43.5%, wikirandom 43.4%, wikirandom 43.0%, wikirandom 42.9%, wikirandom 42.7%, wikirandom 42.7%, wikirandom 42.7%, wikirandom 42.1%, wikirandom 41.8%, wikirandom 40.8%, wikirandom 40.6%, wikirandom 40.5%, wikirandom 40.0%, wikirandom 40.0%, wikirandom 39.9%, wikirandom 39.4%, wikirandom 39.4%, wikirandom 39.3%, wikirandom 38.9%, wikirandom 38.6%, wikirandom 38.5%, wikirandom 38.3%, wikirandom 38.1%, wikirandom 37.3%, wikirandom 36.9%, wikirandom 36.4%, wikirandom 36.1%, wikirandom 35.6%, wikirandom 35.5%, wikirandom 34.6%, wikirandom 34.3%, wikirandom 34.2%, wikirandom 34.0%
+   third    fires 135  wikirandom 89.2%, wikirandom 80.2%, wikirandom 79.4%, wikirandom 78.9%, wikirandom 77.2%, wikirandom 76.6%, wikirandom 76.4%, wikirandom 73.5%, wikirandom 71.9%, wikirandom 70.4%, wikirandom 70.1%, wikirandom 70.1%, wikirandom 69.3%, wikirandom 68.2%, wikirandom 66.9%, wikirandom 62.0%, wikirandom 61.8%, wikirandom 61.0%, wikirandom 60.3%, wikirandom 59.6%, wikirandom 58.8%, wikirandom 58.7%, wikirandom 58.6%, wikirandom 58.1%, wikirandom 58.1%, wikirandom 58.0%, wikirandom 57.7%, wikirandom 57.0%, wikirandom 56.5%, wikirandom 56.1%, wikirandom 55.9%, wikirandom 55.3%, wikirandom 54.9%, wikirandom 54.4%, wikirandom 54.2%, wikirandom 53.9%, wikirandom 53.9%, wikirandom 53.6%, wikirandom 53.3%, wikirandom 52.6%, wikirandom 51.3%, wikirandom 51.0%, wikirandom 50.3%, wikirandom 49.7%, wikirandom 49.5%, wikirandom 49.4%, wikirandom 48.4%, wikirandom 47.7%, wikirandom 47.6%, wikirandom 47.3%, wikirandom 47.2%, wikirandom 46.9%, wikirandom 46.4%, wikirandom 46.3%, wikirandom 46.2%, wikirandom 45.9%, wikirandom 45.5%, wikirandom 45.5%, wikirandom 45.4%, wikirandom 45.3%, wikirandom 45.3%, wikirandom 45.2%, wikirandom 45.1%, wikirandom 45.0%, wikirandom 44.6%, wikirandom 44.4%, wikirandom 44.0%, wikirandom 43.5%, wikirandom 43.4%, wikirandom 43.0%, wikirandom 42.9%, wikirandom 42.7%, wikirandom 42.7%, wikirandom 42.7%, wikirandom 42.1%, wikirandom 41.8%, wikirandom 40.8%, wikirandom 40.6%, wikirandom 40.5%, wikirandom 40.0%, wikirandom 40.0%, wikirandom 39.9%, wikirandom 39.4%, wikirandom 39.4%, wikirandom 39.3%, wikirandom 38.9%, wikirandom 38.6%, wikirandom 38.5%, wikirandom 38.3%, wikirandom 38.1%, wikirandom 37.3%, wikirandom 36.9%, wikirandom 36.4%, wikirandom 36.1%, wikirandom 35.6%, wikirandom 35.5%, wikirandom 34.6%, wikirandom 34.3%, wikirandom 34.2%, wikirandom 34.0%, wikirandom 33.0%, wikirandom 32.8%, wikirandom 32.8%, wikirandom 32.4%, wikirandom 32.3%, wikirandom 32.2%, wikirandom 32.2%, wikirandom 31.7%, wikirandom 31.1%, wikirandom 31.0%, wikirandom 30.8%, wikirandom 30.6%, wikirandom 30.6%, wikirandom 30.5%, wikirandom 30.2%, wikirandom 30.2%, wikirandom 30.0%, wikirandom 29.8%, wikirandom 29.8%, wikirandom 29.0%, wikirandom 28.8%, wikirandom 28.7%, wikirandom 28.3%, wikirandom 28.2%, wikirandom 27.9%, wikirandom 27.9%, wikirandom 27.6%, wikirandom 27.5%, wikirandom 27.5%, wikirandom 27.3%, wikirandom 27.1%, wikirandom 26.6%, wikirandom 26.1%, wikirandom 26.0%, wikirandom 25.3%
+   quarter  fires 154  wikirandom 89.2%, wikirandom 80.2%, wikirandom 79.4%, wikirandom 78.9%, wikirandom 77.2%, wikirandom 76.6%, wikirandom 76.4%, wikirandom 73.5%, wikirandom 71.9%, wikirandom 70.4%, wikirandom 70.1%, wikirandom 70.1%, wikirandom 69.3%, wikirandom 68.2%, wikirandom 66.9%, wikirandom 62.0%, wikirandom 61.8%, wikirandom 61.0%, wikirandom 60.3%, wikirandom 59.6%, wikirandom 58.8%, wikirandom 58.7%, wikirandom 58.6%, wikirandom 58.1%, wikirandom 58.1%, wikirandom 58.0%, wikirandom 57.7%, wikirandom 57.0%, wikirandom 56.5%, wikirandom 56.1%, wikirandom 55.9%, wikirandom 55.3%, wikirandom 54.9%, wikirandom 54.4%, wikirandom 54.2%, wikirandom 53.9%, wikirandom 53.9%, wikirandom 53.6%, wikirandom 53.3%, wikirandom 52.6%, wikirandom 51.3%, wikirandom 51.0%, wikirandom 50.3%, wikirandom 49.7%, wikirandom 49.5%, wikirandom 49.4%, wikirandom 48.4%, wikirandom 47.7%, wikirandom 47.6%, wikirandom 47.3%, wikirandom 47.2%, wikirandom 46.9%, wikirandom 46.4%, wikirandom 46.3%, wikirandom 46.2%, wikirandom 45.9%, wikirandom 45.5%, wikirandom 45.5%, wikirandom 45.4%, wikirandom 45.3%, wikirandom 45.3%, wikirandom 45.2%, wikirandom 45.1%, wikirandom 45.0%, wikirandom 44.6%, wikirandom 44.4%, wikirandom 44.0%, wikirandom 43.5%, wikirandom 43.4%, wikirandom 43.0%, wikirandom 42.9%, wikirandom 42.7%, wikirandom 42.7%, wikirandom 42.7%, wikirandom 42.1%, wikirandom 41.8%, wikirandom 40.8%, wikirandom 40.6%, wikirandom 40.5%, wikirandom 40.0%, wikirandom 40.0%, wikirandom 39.9%, wikirandom 39.4%, wikirandom 39.4%, wikirandom 39.3%, wikirandom 38.9%, wikirandom 38.6%, wikirandom 38.5%, wikirandom 38.3%, wikirandom 38.1%, wikirandom 37.3%, wikirandom 36.9%, wikirandom 36.4%, wikirandom 36.1%, wikirandom 35.6%, wikirandom 35.5%, wikirandom 34.6%, wikirandom 34.3%, wikirandom 34.2%, wikirandom 34.0%, wikirandom 33.0%, wikirandom 32.8%, wikirandom 32.8%, wikirandom 32.4%, wikirandom 32.3%, wikirandom 32.2%, wikirandom 32.2%, wikirandom 31.7%, wikirandom 31.1%, wikirandom 31.0%, wikirandom 30.8%, wikirandom 30.6%, wikirandom 30.6%, wikirandom 30.5%, wikirandom 30.2%, wikirandom 30.2%, wikirandom 30.0%, wikirandom 29.8%, wikirandom 29.8%, wikirandom 29.0%, wikirandom 28.8%, wikirandom 28.7%, wikirandom 28.3%, wikirandom 28.2%, wikirandom 27.9%, wikirandom 27.9%, wikirandom 27.6%, wikirandom 27.5%, wikirandom 27.5%, wikirandom 27.3%, wikirandom 27.1%, wikirandom 26.6%, wikirandom 26.1%, wikirandom 26.0%, wikirandom 25.3%, wikirandom 24.8%, wikirandom 24.8%, wikirandom 24.6%, wikirandom 24.1%, wikirandom 23.7%, wikirandom 23.3%, wikirandom 22.7%, wikirandom 21.8%, wikirandom 21.8%, wikirandom 21.8%, wikirandom 21.7%, wikirandom 21.1%, wikirandom 21.1%, wikirandom 21.0%, wikirandom 20.9%, wikirandom 20.5%, wikirandom 20.5%, wikirandom 20.4%, wikirandom 20.3%
+   band (50.0%, 100.0%]: 43 honest page(s)  <-- the price of that rung
+     wikirandom   share  89.2%  kept     710  in_root   5,835  https://en.wikipedia.org/wiki/1900_Wimbledon_Championships_%E2%80%93_Men%27s_doubles
+     wikirandom   share  80.2%  kept   3,145  in_root  12,761  https://en.wikipedia.org/wiki/Nostromo_%28TV_series%29
+     wikirandom   share  79.4%  kept   2,528  in_root   9,732  https://en.wikipedia.org/wiki/Charles_Buller_Heberden
+     wikirandom   share  78.9%  kept   2,440  in_root   9,097  https://en.wikipedia.org/wiki/Booker_Little_4_and_Max_Roach
+     wikirandom   share  77.2%  kept   1,514  in_root   5,128  https://en.wikipedia.org/wiki/Dallas_Christian_College
+     wikirandom   share  76.6%  kept   3,234  in_root  10,615  https://en.wikipedia.org/wiki/1864_New_York_gubernatorial_election
+     wikirandom   share  76.4%  kept  14,364  in_root  46,618  https://en.wikipedia.org/wiki/Volker_Kauder
+     wikirandom   share  73.5%  kept     538  in_root   1,494  https://en.wikipedia.org/wiki/2007_World_Wrestling_Championships_%E2%80%93_Women%27s_freestyle_55_kg
+     wikirandom   share  71.9%  kept   1,796  in_root   4,585  https://en.wikipedia.org/wiki/Arun_Vora
+     wikirandom   share  70.4%  kept   5,810  in_root  13,790  https://en.wikipedia.org/wiki/Scooby-Doo%21_Moon_Monster_Madness
+     wikirandom   share  70.1%  kept     825  in_root   1,932  https://en.wikipedia.org/wiki/1992_USA_Indoor_Track_and_Field_Championships
+     wikirandom   share  70.1%  kept   3,897  in_root   9,121  https://en.wikipedia.org/wiki/2024_Vermont_Auditor_of_Accounts_election
+     wikirandom   share  69.3%  kept   2,711  in_root   6,133  https://en.wikipedia.org/wiki/Mark_O._Hatfield_Wilderness
+     wikirandom   share  68.2%  kept   1,464  in_root   3,137  https://en.wikipedia.org/wiki/Buttercup_Mountain
+     wikirandom   share  66.9%  kept   1,508  in_root   3,050  https://en.wikipedia.org/wiki/Skanderbeg_Monument
+     wikirandom   share  62.0%  kept   5,590  in_root   9,110  https://en.wikipedia.org/wiki/V%C3%A9z%C3%A8re
+     wikirandom   share  61.8%  kept     336  in_root     543  https://en.wikipedia.org/wiki/Aeopelys
+     wikirandom   share  61.0%  kept   1,267  in_root   1,980  https://en.wikipedia.org/wiki/Unplanned_economies
+     wikirandom   share  60.3%  kept   1,358  in_root   2,061  https://en.wikipedia.org/wiki/St_Osyth_Pit
+     wikirandom   share  59.6%  kept   1,358  in_root   2,005  https://en.wikipedia.org/wiki/Hearts_of_Men
+     wikirandom   share  58.8%  kept     675  in_root     962  https://en.wikipedia.org/wiki/Pleasant_Hill_Township%2C_Sullivan_County%2C_Missouri
+     wikirandom   share  58.7%  kept   1,903  in_root   2,705  https://en.wikipedia.org/wiki/If_I_Ruled_the_World
+     wikirandom   share  58.6%  kept     873  in_root   1,236  https://en.wikipedia.org/wiki/Bellita%C5%9F%2C_%C3%87%C4%B1nar
+     wikirandom   share  58.1%  kept   2,825  in_root   3,921  https://en.wikipedia.org/wiki/Nokia_6275i
+     wikirandom   share  58.1%  kept   2,892  in_root   4,008  https://en.wikipedia.org/wiki/Xinjiekou_station_%28Nanjing_Metro%29
+     wikirandom   share  58.0%  kept     282  in_root     390  https://en.wikipedia.org/wiki/Matt_Hunter
+     wikirandom   share  57.7%  kept   2,860  in_root   3,896  https://en.wikipedia.org/wiki/Give_a_Little_Love_Back_to_the_World
+     wikirandom   share  57.0%  kept   1,006  in_root   1,333  https://en.wikipedia.org/wiki/Emma_Puvrez
+     wikirandom   share  56.5%  kept   1,408  in_root   1,831  https://en.wikipedia.org/wiki/Andrea_Cipressa
+     wikirandom   share  56.1%  kept   4,090  in_root   5,234  https://en.wikipedia.org/wiki/Bridge_End_Inn
+     wikirandom   share  55.9%  kept   7,255  in_root   9,187  https://en.wikipedia.org/wiki/The_Life_of_Andrew_Jackson_%28Marquis_James%29
+     wikirandom   share  55.3%  kept   1,841  in_root   2,276  https://en.wikipedia.org/wiki/HMS_Halcyon_%281813%29
+     wikirandom   share  54.9%  kept     297  in_root     362  https://en.wikipedia.org/wiki/R338_road
+     wikirandom   share  54.4%  kept   2,146  in_root   2,563  https://en.wikipedia.org/wiki/Ministry_of_Foreign_Affairs_and_East_African_Cooperation
+     wikirandom   share  54.2%  kept   1,182  in_root   1,397  https://en.wikipedia.org/wiki/Novy_Artaul
+     wikirandom   share  53.9%  kept     308  in_root     360  https://en.wikipedia.org/wiki/Roodt
+     wikirandom   share  53.9%  kept     335  in_root     391  https://en.wikipedia.org/wiki/Rajasthani_language_movement
+     wikirandom   share  53.6%  kept     666  in_root     769  https://en.wikipedia.org/wiki/Spergularia_rupicola
+     wikirandom   share  53.3%  kept     315  in_root     359  https://en.wikipedia.org/wiki/Bojdan
+     wikirandom   share  52.6%  kept   3,032  in_root   3,371  https://en.wikipedia.org/wiki/As_Long_as_There%27s_Music_%28Charlie_Haden_and_Hampton_Hawes_album%29
+     wikirandom   share  51.3%  kept   1,191  in_root   1,253  https://en.wikipedia.org/wiki/Vladim%C3%ADr_Mor%C3%A1vek
+     wikirandom   share  51.0%  kept   1,292  in_root   1,343  https://en.wikipedia.org/wiki/The_Left-Handed_Woman
+     wikirandom   share  50.3%  kept     742  in_root     752  https://en.wikipedia.org/wiki/Ancylosis_sabulosella
+   band (33.3%, 50.0%]: 57 honest page(s)  <-- the price of that rung
+     wikirandom   share  49.7%  kept   1,567  in_root   1,547  https://en.wikipedia.org/wiki/Otmane_El_Assas
+     wikirandom   share  49.5%  kept   1,514  in_root   1,483  https://en.wikipedia.org/wiki/Sirk%27i_%28Oruro%29
+     wikirandom   share  49.4%  kept   3,673  in_root   3,580  https://en.wikipedia.org/wiki/Old_Turkic_%28Unicode_block%29
+     wikirandom   share  48.4%  kept     384  in_root     360  https://en.wikipedia.org/wiki/Helvey
+     wikirandom   share  47.7%  kept     824  in_root     751  https://en.wikipedia.org/wiki/Pseudothecadactylus_cavaticus
+     wikirandom   share  47.6%  kept   2,758  in_root   2,501  https://en.wikipedia.org/wiki/Sky_Arts_%28New_Zealand_TV_channel%29
+     wikirandom   share  47.3%  kept     404  in_root     362  https://en.wikipedia.org/wiki/Roland_Brown_%28disambiguation%29
+     wikirandom   share  47.2%  kept     545  in_root     487  https://en.wikipedia.org/wiki/Parholaspis_meridionalis
+     wikirandom   share  46.9%  kept     711  in_root     629  https://en.wikipedia.org/wiki/Trombidium_latum
+     wikirandom   share  46.4%  kept     419  in_root     362  https://en.wikipedia.org/wiki/Second_extinction
+     wikirandom   share  46.3%  kept     992  in_root     857  https://en.wikipedia.org/wiki/Tolma
+     wikirandom   share  46.2%  kept   4,512  in_root   3,876  https://en.wikipedia.org/wiki/Incancellabile
+     wikirandom   share  45.9%  kept     687  in_root     584  https://en.wikipedia.org/wiki/Phaeomolis_bertrandi
+     wikirandom   share  45.5%  kept     464  in_root     387  https://en.wikipedia.org/wiki/Geoffrey_King
+     wikirandom   share  45.5%  kept     698  in_root     582  https://en.wikipedia.org/wiki/Oberea_ophidiana
+     wikirandom   share  45.4%  kept   3,465  in_root   2,878  https://en.wikipedia.org/wiki/Brandon%2C_Colorado
+     wikirandom   share  45.3%  kept   2,544  in_root   2,106  https://en.wikipedia.org/wiki/River_1467
+     wikirandom   share  45.3%  kept     435  in_root     360  https://en.wikipedia.org/wiki/Lufu
+     wikirandom   share  45.2%  kept     436  in_root     359  https://en.wikipedia.org/wiki/Seicho
+     wikirandom   share  45.1%  kept     478  in_root     393  https://en.wikipedia.org/wiki/Thomas_Wallner_%28windsurfer%29
+     wikirandom   share  45.0%  kept   1,931  in_root   1,580  https://en.wikipedia.org/wiki/Mountain_High_School_%28Mountain%2C_Wisconsin%29
+     wikirandom   share  44.6%  kept     851  in_root     684  https://en.wikipedia.org/wiki/Fosterella_floridensis
+     wikirandom   share  44.4%  kept     453  in_root     362  https://en.wikipedia.org/wiki/Senator_Doxey_%28disambiguation%29
+     wikirandom   share  44.0%  kept   1,002  in_root     786  https://en.wikipedia.org/wiki/Korhi_barb
+     wikirandom   share  43.5%  kept   6,006  in_root   4,615  https://en.wikipedia.org/wiki/John_Brown_%28fugitive_slave%29
+     wikirandom   share  43.4%  kept     898  in_root     688  https://en.wikipedia.org/wiki/Ch%C5%82apowo%2C_Greater_Poland_Voivodeship
+     wikirandom   share  43.0%  kept   4,870  in_root   3,675  https://en.wikipedia.org/wiki/National_Development_Party_%28Turkey%29
+     wikirandom   share  42.9%  kept     481  in_root     362  https://en.wikipedia.org/wiki/Polinario
+     wikirandom   share  42.7%  kept     520  in_root     388  https://en.wikipedia.org/wiki/Sean_King_O%27Grady
+     wikirandom   share  42.7%  kept   1,282  in_root     956  https://en.wikipedia.org/wiki/Bhinder_Kalan
+     wikirandom   share  42.7%  kept   1,088  in_root     810  https://en.wikipedia.org/wiki/Livin%27_for_Love%3A_The_Natalie_Cole_Story
+     wikirandom   share  42.1%  kept     813  in_root     590  https://en.wikipedia.org/wiki/John_Stuart_Gray
+     wikirandom   share  41.8%  kept     767  in_root     550  https://en.wikipedia.org/wiki/Homelix_vittata
+     wikirandom   share  40.8%  kept  14,424  in_root   9,950  https://en.wikipedia.org/wiki/Fort_Trumbull
+     wikirandom   share  40.6%  kept   1,031  in_root     706  https://en.wikipedia.org/wiki/Messaoud_Boudjeriou
+     wikirandom   share  40.5%  kept     575  in_root     391  https://en.wikipedia.org/wiki/Dowita
+     wikirandom   share  40.0%  kept   4,831  in_root   3,218  https://en.wikipedia.org/wiki/Markham_Stouffville_Hospital
+     wikirandom   share  40.0%  kept     541  in_root     360  https://en.wikipedia.org/wiki/AYC
+     wikirandom   share  39.9%  kept     545  in_root     362  https://en.wikipedia.org/wiki/Edmund_Lawrence
+     wikirandom   share  39.4%  kept     556  in_root     362  https://en.wikipedia.org/wiki/Alison_Rose
+     wikirandom   share  39.4%  kept     909  in_root     591  https://en.wikipedia.org/wiki/Lawson_discography
+     wikirandom   share  39.3%  kept  10,305  in_root   6,681  https://en.wikipedia.org/wiki/Callosciurus
+     wikirandom   share  38.9%  kept   5,117  in_root   3,264  https://en.wikipedia.org/wiki/Football_Association_of_the_Czech_Republic
+     wikirandom   share  38.6%  kept     577  in_root     362  https://en.wikipedia.org/wiki/Sha%27arei_Orah
+     wikirandom   share  38.5%  kept   5,069  in_root   3,173  https://en.wikipedia.org/wiki/Valley_Fire_%282018%29
+     wikirandom   share  38.3%  kept   4,138  in_root   2,572  https://en.wikipedia.org/wiki/Spoileron
+     wikirandom   share  38.1%  kept   3,186  in_root   1,957  https://en.wikipedia.org/wiki/This_Time_I_Almost_Made_It_%28song%29
+     wikirandom   share  37.3%  kept     636  in_root     379  https://en.wikipedia.org/wiki/LaQuan
+     wikirandom   share  36.9%  kept   5,442  in_root   3,186  https://en.wikipedia.org/wiki/Jennifer_Walker_Elrod
+     wikirandom   share  36.4%  kept     632  in_root     362  https://en.wikipedia.org/wiki/Battle_of_Chancellorsville_order_of_battle
+     wikirandom   share  36.1%  kept     693  in_root     391  https://en.wikipedia.org/wiki/Koratikal
+     wikirandom   share  35.6%  kept   5,170  in_root   2,860  https://en.wikipedia.org/wiki/Dana_LeVangie
+     wikirandom   share  35.5%  kept  10,541  in_root   5,793  https://en.wikipedia.org/wiki/Cedar_Crest_College
+     wikirandom   share  34.6%  kept   1,009  in_root     533  https://en.wikipedia.org/wiki/Plagyostila_senegalensis
+     wikirandom   share  34.3%  kept   1,570  in_root     819  https://en.wikipedia.org/wiki/Cedar_Springs%2C_Kentucky
+     wikirandom   share  34.2%  kept   4,239  in_root   2,200  https://en.wikipedia.org/wiki/Jack_%26_Jason%27s_Pancakes_%26_Waffles
+     wikirandom   share  34.0%  kept     702  in_root     362  https://en.wikipedia.org/wiki/Ichihashi
+   band (25.0%, 33.3%]: 35 honest page(s)  <-- the price of that rung
+     wikirandom   share  33.0%  kept     798  in_root     393  https://en.wikipedia.org/wiki/Merger_%28horse%29
+     wikirandom   share  32.8%  kept   8,675  in_root   4,241  https://en.wikipedia.org/wiki/InterContinental_Marseille_Hotel_Dieu
+     wikirandom   share  32.8%  kept   3,241  in_root   1,580  https://en.wikipedia.org/wiki/Prospect_Point_Camp
+     wikirandom   share  32.4%  kept   1,497  in_root     719  https://en.wikipedia.org/wiki/Acronicta_hastulifera
+     wikirandom   share  32.3%  kept     823  in_root     393  https://en.wikipedia.org/wiki/Acquisition_Program_Baseline
+     wikirandom   share  32.2%  kept   2,665  in_root   1,268  https://en.wikipedia.org/wiki/The_Very_Best_of_Peter_Andre%3A_The_Hits_Collection
+     wikirandom   share  32.2%  kept   1,023  in_root     485  https://en.wikipedia.org/wiki/William_Garrett_%28Alabama_politician%29
+     wikirandom   share  31.7%  kept     883  in_root     409  https://en.wikipedia.org/wiki/Piz_Bles
+     wikirandom   share  31.1%  kept     865  in_root     390  https://en.wikipedia.org/wiki/Lester-MG_T51
+     wikirandom   share  31.0%  kept   5,175  in_root   2,323  https://en.wikipedia.org/wiki/Guangzhou_Lianhuashan_railway_station
+     wikirandom   share  30.8%  kept   2,377  in_root   1,060  https://en.wikipedia.org/wiki/Farces_et_moralit%C3%A9s
+     wikirandom   share  30.6%  kept   3,368  in_root   1,487  https://en.wikipedia.org/wiki/Muftian
+     wikirandom   share  30.6%  kept   1,000  in_root     441  https://en.wikipedia.org/wiki/Tuan_Wreh
+     wikirandom   share  30.5%  kept     890  in_root     390  https://en.wikipedia.org/wiki/Brigitte_Prass
+     wikirandom   share  30.2%  kept   5,400  in_root   2,340  https://en.wikipedia.org/wiki/Corn_Island_%28film%29
+     wikirandom   share  30.2%  kept     902  in_root     390  https://en.wikipedia.org/wiki/Adgur_Kakoba
+     wikirandom   share  30.0%  kept   2,308  in_root     987  https://en.wikipedia.org/wiki/Easingwold_railway_station
+     wikirandom   share  29.8%  kept   3,044  in_root   1,295  https://en.wikipedia.org/wiki/A_Dipset_X-Mas
+     wikirandom   share  29.8%  kept     914  in_root     388  https://en.wikipedia.org/wiki/The_Menagerie
+     wikirandom   share  29.0%  kept   5,936  in_root   2,424  https://en.wikipedia.org/wiki/Club_Atl%C3%A9tico_Aldosivi
+     wikirandom   share  28.8%  kept   5,560  in_root   2,244  https://en.wikipedia.org/wiki/Pennant_of_the_president_of_the_Republic_of_Poland
+     wikirandom   share  28.7%  kept   1,962  in_root     790  https://en.wikipedia.org/wiki/Imola_railway_station
+     wikirandom   share  28.3%  kept   1,522  in_root     601  https://en.wikipedia.org/wiki/Canton_of_Charmes
+     wikirandom   share  28.2%  kept   7,469  in_root   2,928  https://en.wikipedia.org/wiki/Monsieur_Klein
+     wikirandom   share  27.9%  kept   1,562  in_root     605  https://en.wikipedia.org/wiki/Danta_Whitaker
+     wikirandom   share  27.9%  kept   5,475  in_root   2,115  https://en.wikipedia.org/wiki/City_in_Darkness
+     wikirandom   share  27.6%  kept  12,497  in_root   4,768  https://en.wikipedia.org/wiki/Suspension_of_A%C3%A9cio_Neves_from_the_Federal_Senate
+     wikirandom   share  27.5%  kept   1,041  in_root     395  https://en.wikipedia.org/wiki/B%C3%B8rge_Raahauge_Nielsen
+     wikirandom   share  27.5%  kept   1,527  in_root     578  https://en.wikipedia.org/wiki/Thysanodonta_diadema
+     wikirandom   share  27.3%  kept   6,235  in_root   2,345  https://en.wikipedia.org/wiki/Rail_transport_in_the_Czech_Republic
+     wikirandom   share  27.1%  kept   1,050  in_root     391  https://en.wikipedia.org/wiki/Joan_of_Saint-Pol
+     wikirandom   share  26.6%  kept   1,220  in_root     442  https://en.wikipedia.org/wiki/Ibrahim_Chakir
+     wikirandom   share  26.1%  kept   1,107  in_root     391  https://en.wikipedia.org/wiki/Windsong%27s_Legacy
+     wikirandom   share  26.0%  kept   1,103  in_root     388  https://en.wikipedia.org/wiki/Zubtsovo
+     wikirandom   share  25.3%  kept   1,853  in_root     626  https://en.wikipedia.org/wiki/Renato_Cioni
+   band (20.0%, 25.0%]: 19 honest page(s)  <-- the price of that rung
+     wikirandom   share  24.8%  kept   4,841  in_root   1,599  https://en.wikipedia.org/wiki/Canon_EOS_1000D
+     wikirandom   share  24.8%  kept   1,226  in_root     404  https://en.wikipedia.org/wiki/Erminio
+     wikirandom   share  24.6%  kept   2,474  in_root     805  https://en.wikipedia.org/wiki/Sheppard_%28EP%29
+     wikirandom   share  24.1%  kept   5,027  in_root   1,596  https://en.wikipedia.org/wiki/Grands_Boulevards_station
+     wikirandom   share  23.7%  kept   4,658  in_root   1,449  https://en.wikipedia.org/wiki/Basic_beryllium_acetate
+     wikirandom   share  23.3%  kept   1,272  in_root     387  https://en.wikipedia.org/wiki/B._J._Rosco
+     wikirandom   share  22.7%  kept   1,330  in_root     390  https://en.wikipedia.org/wiki/Whittier_C._Atkinson
+     wikirandom   share  21.8%  kept   1,396  in_root     390  https://en.wikipedia.org/wiki/Elizabeth_Buchanan
+     wikirandom   share  21.8%  kept   1,398  in_root     390  https://en.wikipedia.org/wiki/Ram%C3%B3n_de_Trobat
+     wikirandom   share  21.8%  kept   3,056  in_root     852  https://en.wikipedia.org/wiki/10th_Anniversary_%28Sash%21_album%29
+     wikirandom   share  21.7%  kept   1,966  in_root     546  https://en.wikipedia.org/wiki/James_Watrous
+     wikirandom   share  21.1%  kept  14,159  in_root   3,786  https://en.wikipedia.org/wiki/WABE-TV
+     wikirandom   share  21.1%  kept   8,654  in_root   2,313  https://en.wikipedia.org/wiki/Pumi_people
+     wikirandom   share  21.0%  kept   1,539  in_root     408  https://en.wikipedia.org/wiki/Joe_Dougherty_%28rower%29
+     wikirandom   share  20.9%  kept   1,487  in_root     393  https://en.wikipedia.org/wiki/Carol_Duckworth
+     wikirandom   share  20.5%  kept   2,221  in_root     574  https://en.wikipedia.org/wiki/Herpetopoma_bellum
+     wikirandom   share  20.5%  kept   1,918  in_root     495  https://en.wikipedia.org/wiki/Ravindra_Kalia
+     wikirandom   share  20.4%  kept   1,522  in_root     391  https://en.wikipedia.org/wiki/Rio_Yamada
+     wikirandom   share  20.3%  kept   1,544  in_root     394  https://en.wikipedia.org/wiki/In_Pieces_%28film%29
+   share distribution:  max 89.2%  p90 53.9%  median 17.7%  p10 2.5%
+   worst ten pages by share:
+     wikirandom   share  89.2%  kept     710  in_root   5,835  rung trunc-root:89%
+     wikirandom   share  80.2%  kept   3,145  in_root  12,761  rung trunc-root:80%
+     wikirandom   share  79.4%  kept   2,528  in_root   9,732  rung trunc-root:79%
+     wikirandom   share  78.9%  kept   2,440  in_root   9,097  rung trunc-root:79%
+     wikirandom   share  77.2%  kept   1,514  in_root   5,128  rung trunc-root:77%
+     wikirandom   share  76.6%  kept   3,234  in_root  10,615  rung trunc-root:77%
+     wikirandom   share  76.4%  kept  14,364  in_root  46,618  rung trunc-root:76%
+     wikirandom   share  73.5%  kept     538  in_root   1,494  rung trunc-root:74%
+     wikirandom   share  71.9%  kept   1,796  in_root   4,585  rung trunc-root:72%
+     wikirandom   share  70.4%  kept   5,810  in_root  13,790  rung trunc-root:70%
+
+== the same census, by source — a distribution is the mixture's
+   hn           n  15  max  14.5%  p90   9.8%  median   0.5%  fires   0  bands   0/  0/  0/  0
+   lobsters     n  22  max  19.8%  p90   4.1%  median   0.0%  fires   0  bands   0/  0/  0/  0
+   wikirandom   n 316  max  89.2%  p90  55.3%  median  19.8%  fires  43  bands  43/ 57/ 35/ 19
+   (bands are the four above, top to bottom: >50% / 33.3-50% / 25-33.3% / 20-25%)
+
+== left out (10) — named, not folded into a total
+   wikirandom   no region (67 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/Helen_Portugal
+   wikirandom   no region (134 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/M%C3%BCnster_%28disambiguation%29
+   wikirandom   no region (134 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/La_Lanterne
+   wikirandom   no region (195 kept, scope main>section#mwAQ) https://en.wikipedia.org/wiki/Wesa
+   hn           no region (0 kept, scope empty-root)     https://minesweeper.mikelacher.com/
+   hn           no region (0 kept, scope empty-root)     https://beaksec.github.io/posts/telegram-desktop-one-click-account-takeover/
+   hn           no region (0 kept, scope empty-root)     https://community.bitwarden.com/t/published-version-update-in-app-stores/102750
+   hn           HTTPError                                https://phys.org/news/2026-10-chernobyl-particles-reveal-unexpectedly-stable.html
+   hn           not html                                 https://chronicles.popvax.com/p/popvax-goes-clinical
+   lobsters     not html                                 https://www.youtube.com/watch?v=4gcSlBORoTI
