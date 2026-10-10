@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # tests/ — fo
 
 import keyhole  # noqa: E402
 import keyhole_mcp  # noqa: E402
+import probe_gate_span  # noqa: E402
 import probe_rules  # noqa: E402
 
 
@@ -753,6 +754,37 @@ class TestMCPFetchMany(unittest.TestCase):
         self.assertIn("hint: render=true", out["content"][0]["text"])
         out = self._call({"urls": ["https://a.dev"], "render": True}, walled)
         self.assertNotIn("hint: render=true", out["content"][0]["text"])
+
+
+class TestProseCounter(unittest.TestCase):
+    """`_ParaLoss` counted prose on one side of the suppression and not the other.
+
+    Its condition was `_para_depth` — a `<p>` opened *before* the suppression and
+    still open across it — which reads inline chrome (a citation bracket inside a
+    paragraph) and is blind to block chrome that ate whole paragraphs, because a
+    `<p>` opened inside a suppressed frame never increments the shipped reader's
+    depth. Both are prose the reader lost, so the `para` row of
+    `probe_gate_span` is now scored on their union.
+    """
+
+    def _para(self, html):
+        return keyhole._reader(html, probe_gate_span._ParaLoss).sup_para
+
+    def test_block_chrome_that_ate_paragraphs_is_counted(self):
+        # the case the old condition read as 0: navbox-style chrome holding <p>s
+        html = ("<main><p>" + "article words " * 40 + "</p>"
+                "<aside><p>" + "place name " * 30 + "</p></aside></main>")
+        self.assertGreater(self._para(html), 0)
+
+    def test_inline_chrome_inside_a_paragraph_is_counted(self):
+        html = ("<main><p>" + "article words " * 40
+                + "<aside>edit this page</aside></p></main>")
+        self.assertGreater(self._para(html), 0)
+
+    def test_kept_prose_is_not_counted_as_lost(self):
+        # the counter is about what suppression removed, not about the article
+        html = "<main><p>" + "article words " * 40 + "</p></main>"
+        self.assertEqual(self._para(html), 0)
 
 
 @unittest.skipUnless(os.environ.get("KEYHOLE_NET_TESTS"), "set KEYHOLE_NET_TESTS=1 for live checks")

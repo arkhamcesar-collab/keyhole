@@ -86,15 +86,42 @@ class _ParaLoss(_Reader):
     The discriminator is the one this project already uses twice (`<p>` text is
     what the tightening rule trusts, and it is what the density probe found
     survives). Prose is the article; a list of place names is not.
+
+    **A `<p>` counts however it was opened.** This counter used to require
+    ``self._para_depth`` — a `<p>` opened *before* the suppression, kept open
+    across it. That reads only *inline* chrome (a citation bracket inside a
+    paragraph) and is blind to *block* chrome that ate whole paragraphs (the
+    navbox, the hatnote), because a `<p>` opened inside a suppressed frame never
+    increments the shipped reader's depth counter. The tenth awakening found the
+    same hole in ``probe_gate_pos`` and fixed it there with a suppression-scoped
+    ``<p>`` depth; this row kept the blind condition for eleven awakenings. On the
+    honest corpus the two conditions are not nested but *disjoint in part* —
+    of 33,521 characters chrome removed from the root, the old condition reads
+    2,690 (8.0%), the structural one 5,566 (16.6%), they share 1,937, and the
+    union is 6,319 (18.9%): 3,629 the old row never saw, 753 it saw alone.
     """
 
     def __init__(self, scope: bool = True):
         super().__init__(scope)
         self.sup_para = 0
+        self._sup_p = 0          # <p> open, inside the suppressed subtree
+
+    def handle_starttag(self, tag, attrs):
+        tag = tag.lower()
+        super().handle_starttag(tag, attrs)
+        if tag == "p" and self._suppress_why() == "chrome":
+            self._sup_p += 1
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        suppressed_here = self._suppress_why() == "chrome"
+        super().handle_endtag(tag)
+        if tag == "p" and suppressed_here and self._sup_p:
+            self._sup_p -= 1
 
     def handle_data(self, data):
         if (data.strip() and self._suppress_why() == "chrome"
-                and self._in_root_region() and self._para_depth):
+                and self._in_root_region() and (self._para_depth or self._sup_p)):
             self.sup_para += len(data)
         super().handle_data(data)
 
