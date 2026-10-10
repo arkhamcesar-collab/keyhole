@@ -87,8 +87,16 @@ already non-empty), not by measurement. That is an argument, and it is written
 here as one. Nothing in `keyhole.py` was touched: this is an instrument and a
 number, and the change it argues for is not made on the strength of a probe.
 
-Run:  python tests/probe_drop.py [--fuzz N] [--min-chars N]
+Run:  python tests/probe_drop.py [--fuzz N] [--min-chars N] [--order=url]
+
+`--order=url` pins the page order on the URL instead of on `shipped_share`, so
+the fuzz indexes the same page before and after a change to the counter and both
+runs score the *same* mutations. Without it the probe can only compare two
+readings inside one run; with it, it can compare two runs. The 1,500 mutations
+are not re-drawn to make a point — the digest printed under the header is what
+says they were not.
 """
+import hashlib
 import importlib.util
 import os
 import statistics
@@ -288,7 +296,24 @@ def main():
 
     # The sibling's own order — the fuzz indexes into this list, so a different
     # order is a different sample of the same experiment.
-    rows.sort(key=lambda r: -r["shipped_share"])
+    #
+    # That is the trap the eighteenth awakening walked into and named: the
+    # sibling sorts by `shipped_share`, which is the number under test, so
+    # changing the counter re-sorts the list and the fuzz — which picks its page
+    # by index — re-rolls its mutations. Two runs of the *same* probe and the
+    # same 1,500 rounds then score two different mutation sets, and *before vs.
+    # after* is not available, only *this vs. that*. `--order=url` pins the
+    # order on a key the counter cannot move, so the same index is the same page
+    # in both runs and the sample is shared. The sample digest below is the
+    # witness: same digest, same mutations, and the only thing that changed is
+    # the counter.
+    pinned = "--order=url" in sys.argv
+    rows.sort(key=(lambda r: r["url"]) if pinned else (lambda r: -r["shipped_share"]))
+    _seq = "|".join(f"{r['src']}:{r['url']}" for r in rows)
+    print(f"   page order: {len(rows)} pages "
+          + ("pinned by url — invariant to the counter under test"
+             if pinned else "by shipped_share — the number under test")
+          + f"   sample digest {hashlib.sha256(_seq.encode()).hexdigest()[:16]}")
 
     moved = [r for r in rows if abs(r["shipped_share"] - r["shipped_nodrop_share"]) > 1e-12]
     saved = [r for r in rows if r["shipped_fires"] and not r["shipped_nodrop_fires"]]
