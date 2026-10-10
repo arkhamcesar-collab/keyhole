@@ -369,10 +369,10 @@ def fuzz(pages, clean_kept, rounds, seed=0):
     out = {k: {"caught": 0, "missed_real": 0, "silent_caught": 0,
                "zero_cost": 0, "partial": 0, "examples": []} for k in CANDIDATES}
     out.update({"real": 0, "silent": 0, "caught_now": 0, "n": 0,
-                "real_kinds": {}})
+                "real_kinds": {}, "blind": 0, "blind_named": []})
     for _ in range(rounds):
         i = rnd.randrange(len(pages))
-        src, label = pages[i]
+        src, label, url = pages[i]
         clean = clean_kept[i]
         anchors = [m for m in ("<main", "<article") if m in src]
         if rnd.random() < 0.75 and anchors:
@@ -408,6 +408,17 @@ def fuzz(pages, clean_kept, rounds, seed=0):
                 out["silent"] += 1
             else:
                 out["caught_now"] += 1
+            # A real truncation on a page whose *region* is empty. Every reading
+            # that attributes the loss to a frame inside the root returns 0 here
+            # — not because it is blind, but because its numerator lives in a
+            # region that does not exist on this page. The zero is structural,
+            # and it is the shape the twenty-fourth awakening went looking for:
+            # the family's blind spot is not the counter, it is the region.
+            if c["sup_in_root"] == 0 and c["kept_nc"] > c["kept"]:
+                out["blind"] += 1
+                if len(out["blind_named"]) < 4:
+                    out["blind_named"].append((label, url, clean, c["kept"],
+                                               c["kept_nc"], c["scope"]))
         for k in CANDIDATES:
             if c[f"{k}_fires"]:
                 if real:
@@ -427,10 +438,13 @@ def fuzz(pages, clean_kept, rounds, seed=0):
                 out[k]["missed_real"] += 1
                 if len(out[k]["examples"]) < 6:
                     out[k]["examples"].append({
-                        "label": label, "clean": clean, "kept": c["kept"],
+                        "label": label, "url": url, "clean": clean,
+                        "kept": c["kept"], "kept_nc": c["kept_nc"],
                         "lost": lost, "kinds": dict(c["sup_kind"]),
                         "ptext": c["sup_ptext"], "li": c["sup_li"],
                         "inline": c["sup_pinline"],
+                        "in_root": c["sup_in_root"], "scope": c["scope"],
+                        "rung": c["rung"],
                     })
     return out
 
@@ -543,6 +557,21 @@ def main():
         vals = sorted(r[k] for r in rows if r["kept"] >= floor)
         print(f"   {lbl:<32} max {max(vals) * 100:>5.1f}%  p90 "
               f"{vals[int(len(vals) * .9)] * 100:>5.1f}%  median {statistics.median(vals) * 100:>5.1f}%")
+    # The pages where the counter is at zero *by construction*, named. A row
+    # whose scope is `empty-root` returns text the root never contained: the
+    # numerator of every region reading is inside a region that does not exist,
+    # so its 0.0% is not a measurement of that page, it is arithmetic. The
+    # honest census comes before the fuzz one on purpose — if the shape is
+    # already here without any mutation, the fuzz is not producing it.
+    blind = [r for r in rows if r["scope"] == keyhole.SCOPE_EMPTY_ROOT]
+    print(f"\n   pages whose region is empty (scope {keyhole.SCOPE_EMPTY_ROOT}): "
+          f"{len(blind)} of {len(rows)}"
+          + (f"  — {sum(r['shipped_share'] for r in blind) * 100:.1f}% total share"
+             f" by construction" if blind else ""))
+    for r in blind:
+        lost = r["kept_nc"] - r["kept"]
+        print(f"     {r['src']:<12} kept {r['kept']:>7,}  no-chrome {r['kept_nc']:>7,}  "
+              f"unattributed loss {lost:>6,}  in_root {r['sup_in_root']:,}  {r['url']}")
     print(f"\n   fires on the honest corpus:  "
           + "   ".join(f"{k.replace('_fires', '')} {len([r for r in rows if r[k]])}"
                        for k in ("shipped_fires", "span_fires", "ptext_fires",
@@ -571,7 +600,12 @@ def main():
                 html = _pg.cached_download(r["url"])
             except Exception:
                 continue
-            pages.append((html, r["src"]))
+            # (html, src, url) — the URL rides along so a MISSED case can be
+            # *named* instead of described by its corpus: the twenty-fourth
+            # awakening could read "hn clean 2 513 kept 314" and had no way to
+            # say which page it was, which is the same hole that the eleventh
+            # closed by printing the kind breakdown instead of counting cases.
+            pages.append((html, r["src"], r["url"]))
             clean_kept.append(candidates(html)["kept"])
         print(f"\n== fuzz: {rounds} mutations that open a suppression inside the root")
         f = fuzz(pages, clean_kept, rounds)
@@ -583,17 +617,34 @@ def main():
         print(f"   of those, the ladder caught it:       {f['caught_now']}")
         print(f"   of those, SILENT (parse=strict):      {f['silent']}   <-- what the gate")
         print(f"     {'':<34}exists to catch")
+        print(f"   of those, on a page whose region is empty: {f['blind']}"
+              f"   <-- 0 attributed is arithmetic, not agreement")
+        for label, url, clean, kept, kept_nc, scope in f["blind_named"]:
+            print(f"     {label:<12} {url}\n"
+                  f"       clean {clean:,} kept {kept:,} no-chrome {kept_nc:,} "
+                  f"scope {scope}  — every frame-attributing row reads 0 here")
         print(f"\n   {'':<8} {'caught':>7} {'missed':>7} {'silent':>8} {'no-cost':>8} {'partial':>8}")
         for k in CANDIDATES:
             print(f"   {k:<8} {f[k]['caught']:>7} {f[k]['missed_real']:>7} "
                   f"{f[k]['silent_caught']:>3}/{f['silent']:<4} {f[k]['zero_cost']:>8} "
                   f"{f[k]['partial']:>8}")
-        for k in ("ptext", "punion", "plist"):
+        # The gate that ships belongs in this list. Its single miss is the case
+        # the twenty-fourth went looking for, and a miss that is never named is
+        # a total; naming it is what lets the reader check the claim.
+        for k in ("shipped", "span", "ptext", "punion", "plist"):
             for ex in f[k]["examples"]:
-                print(f"   {k} MISSED: {ex['label']}  clean {ex['clean']:,} kept "
-                      f"{ex['kept']:,} (lost {ex['lost']:,})  ptext {ex['ptext']:,} "
-                      f"inline {ex['inline']:,} "
-                      f"li {ex['li']:,}  eaten: {_fmt_kinds(ex['kinds'])}")
+                # A MISSED case is *named*: which page, what the two passes
+                # returned, what each reading attributed, and the two facts
+                # that explain a zero — where the result came from (`scope`)
+                # and whether the loss was ever inside the root (`in_root`).
+                print(f"   {k} MISSED: {ex['label']} {ex['url']}\n"
+                      f"      clean {ex['clean']:,} kept {ex['kept']:,} "
+                      f"(lost {ex['lost']:,})  no-chrome {ex['kept_nc']:,}  "
+                      f"rung {ex['rung']}  scope {ex['scope'] or 'none'}\n"
+                      f"      attributed: ptext {ex['ptext']:,}  "
+                      f"inline {ex['inline']:,}  li {ex['li']:,}  "
+                      f"in_root {ex['in_root']:,}  "
+                      f"eaten: {_fmt_kinds(ex['kinds'])}")
 
     print(f"\n== left out ({len(skipped)}) — named, not folded into a total")
     for src, url, why in skipped:
