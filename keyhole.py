@@ -17,9 +17,11 @@ Every heuristic above is best-effort, so every one of them is *named* in the
 result: which root was used (`scope=main>div.mw-content-ltr`), whether the page
 had no root at all (`scope=none`), whether a root was found and the cut kept
 nothing (`scope=empty-root`), whether chrome suppression had to be switched off
-(`parse=no-chrome`), and whether the HTML parser itself gave up part-way
-(`parse_error`). A relaxed pass that stays quiet is indistinguishable from a
-page that never needed relaxing, and only one of those is worth trusting.
+(`parse=no-chrome`), whether it was switched off because it had eaten the
+root's own text rather than because nothing survived (`parse=trunc-root:88%`),
+and whether the HTML parser itself gave up part-way (`parse_error`). A relaxed
+pass that stays quiet is indistinguishable from a page that never needed
+relaxing, and only one of those is worth trusting.
 
 Stdlib only — no install step, runs anywhere Python does.
 
@@ -47,7 +49,7 @@ import zlib
 from dataclasses import dataclass, field, asdict
 from html.parser import HTMLParser
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 BROWSER_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -301,8 +303,10 @@ class _Reader(HTMLParser):
         self._ctrs: list[_Ctr] = []         # containers closed, with final spans
         self._chars = 0                     # non-suppressed text seen
         self._para = 0                      # ... of it, inside a <p>
+        self.sup_in_root = 0                # readable text suppression removed
+                                            # while the root frame was open
         self._para_depth = 0
-        self._stack: list[tuple[str, bool]] = []   # (tag, suppressed)
+        self._stack: list[tuple[str, str]] = []   # (tag, why suppressed: ""|chrome|drop)
         self._in_title = False
         self._cur_link: str | None = None
         self._link_text: list[str] = []
@@ -315,7 +319,22 @@ class _Reader(HTMLParser):
         return {k.lower(): (v or "") for k, v in attrs}
 
     def _suppressed(self) -> bool:
-        return any(s for _, s in self._stack)
+        return any(w for _, w in self._stack)
+
+    def _suppress_why(self) -> str:
+        """Why text right here is being dropped: ``"chrome"``, ``"drop"``, or ``""``.
+
+        The distinction matters because only one of them is a loss. A ``<script>``
+        inside ``<main>`` is suppressed by ``_DROP_TAGS`` and holds no readable
+        text at all; counting its bytes as "text suppression threw away" made
+        every page with an inline script look like an article being eaten (MDN
+        40%, GitHub 90%, both measuring their own code). Only a chrome rule
+        removes words a reader would have seen.
+        """
+        for _, w in reversed(self._stack):
+            if w:
+                return w
+        return ""
 
     # Structural tags are never chrome: suppressing one of these hides an entire
     # page. Wikipedia's <html> carries a class containing "main-menu", which is
@@ -444,9 +463,9 @@ class _Reader(HTMLParser):
             self._root_end = (len(self.md), len(self.txt), len(self.links))
         self._apply_scope()
 
-    def _push(self, tag, suppress, prefix=None):
-        self._stack.append((tag, suppress))
-        if not suppress and prefix:
+    def _push(self, tag, why, prefix=None):
+        self._stack.append((tag, why))
+        if not why and prefix:
             self.md.append(prefix)
 
     # -- containers (candidates for the paragraph-tightening rule)
@@ -497,7 +516,9 @@ class _Reader(HTMLParser):
             if name == "og:title" and not self.title:
                 self.title = a.get("content", "").strip()
 
-        suppress = self._suppressed() or tag in _DROP_TAGS or self._is_chrome(tag, a)
+        suppress = self._suppress_why()
+        if not suppress:
+            suppress = "drop" if tag in _DROP_TAGS else "chrome" if self._is_chrome(tag, a) else ""
 
         if tag in ("ul", "ol"):
             self._list_depth += 1
@@ -611,9 +632,28 @@ class _Reader(HTMLParser):
             self._pre_depth = max(0, self._pre_depth - 1)
             self.md.append("\n```\n")
 
+    def _in_root_region(self) -> bool:
+        """Are we inside the content root, between its open and close tag?
+
+        The same condition that stamps ``_root_end``: the root's own frame is
+        still on the stack, unmatched. Text dropped here is text dropped from
+        the article's own region — not the nav outside it.
+        """
+        return (self._root_pos is not None and self._root_end is None
+                and self._root_pos < len(self._stack)
+                and self._stack[self._root_pos][0] == self._root_exact)
+
     def handle_data(self, data):
         if self._in_title:
             self.title = f"{self.title} {data}".strip() if self.title else data.strip()
+        if self._suppress_why() == "chrome":
+            # Chrome suppression is not free: it may have removed the article's
+            # own words. Counted here so _parse can tell "this page had little
+            # text" from "this page had text and I threw it away". Only chrome:
+            # a <script> inside the root is dropped, not lost.
+            if data.strip() and self._in_root_region():
+                self.sup_in_root += len(data)
+            return
         if self._suppressed():
             return
         self._chars += len(data)
@@ -638,6 +678,53 @@ def _has_content(p: _Reader) -> bool:
     early and hands back nothing at all while reporting success.
     """
     return bool("".join(p.md).strip() or "".join(p.txt).strip() or p.links)
+
+
+# When the strict pass kept less than half of what the root's own region held,
+# the extraction did not clean the page — it ate it. The number is not tuned:
+# "more was thrown away than kept" is the same judgment the ladder already makes
+# about nothing at all, only measured against the root region instead of zero.
+ATE_ROOT = 0.5
+
+# ...but a share alone is scale-free, and that makes it meaningless on a document
+# with ten characters in it: '<main><p>REAL</p><aside>hidden</aside>' loses 60%
+# of its root and is a fixture, not a truncation (test_keyhole keeps that case).
+# So the loss also has to be larger than what this tool already calls no text at
+# all — the same 200 characters `fetch_maybe_render` uses to call a 200 with a
+# body an empty shell. A root smaller than an empty page has nothing to lose.
+EMPTY_TEXT = 200
+
+
+def root_lost_share(p: _Reader) -> float:
+    """Share of the content root's readable text that suppression threw away.
+
+    Measured against the root's own region, not the whole document, because
+    removing nav and footers is the tool working — only text dropped from
+    *inside* the root is text dropped from the article.
+
+    Measured on the nine live pages of ``tests/probe_truncation.py``, where the
+    worst honest page loses 23% (npm keeps its readme's sidebars inside
+    ``<main>``); under mutation the same measure climbs past 50% and reaches
+    99%. The probe is the record of where the gate sits and why.
+
+    A share on its own is a diagnostic, not a decision: see :func:`ate_the_root`.
+    """
+    kept = len(_text_of(p))
+    region = kept + p.sup_in_root
+    return (p.sup_in_root / region) if region else 0.0
+
+
+def ate_the_root(p: _Reader) -> bool:
+    """Did chrome suppression eat the article? Both halves have to hold.
+
+    * more readable text dropped from the root's own region than the result kept
+      (``root_lost_share > ATE_ROOT``);
+    * and the loss is bigger than an empty page (``EMPTY_TEXT``), because a stub
+      of four words that lost six is not a truncated article, it is a document
+      with nothing in it — relaxing there buys a language switcher, not a page.
+    """
+    kept = len(_text_of(p))
+    return p.sup_in_root > kept and p.sup_in_root > EMPTY_TEXT
 
 
 def _reader(html_text: str, cls=None, scope: bool = True) -> _Reader:
@@ -694,12 +781,26 @@ def _parse(html_text: str) -> _Reader:
     of six real pages (tests/probe_fallback.py --fuzz): rung 2 came up empty 400
     times, rung 3 rescued 0 of them. A fallback that cannot fire is a comment
     pretending to be safety.
+
+    The gate is not "did anything survive" but "did the article survive". A
+    suppression opened inside the root and never closed keeps the head of the
+    article and eats its tail; the result is a short page that says
+    ``parse=strict``, i.e. the silent truncation — the empty success wearing the
+    costume of a page that simply had little text. So when the strict pass threw
+    away more of the root's readable text than it kept, it is as failed as a pass
+    that kept nothing, and the two are named differently: ``parse=no-chrome``
+    when nothing survived, ``parse=trunc-root:NN%`` when a minority did.
     """
     p = _reader(html_text)
-    if _has_content(p):
-        return p
-    p = _reader(html_text, _NoChromeReader)
-    p.rung = "no-chrome"
+    if not _has_content(p):
+        q = _reader(html_text, _NoChromeReader)
+        q.rung = "no-chrome"          # nothing survived the strict pass
+        return q
+    if ate_the_root(p):
+        lost = root_lost_share(p)
+        q = _reader(html_text, _NoChromeReader)
+        q.rung = f"trunc-root:{lost * 100:.0f}%"
+        return q
     return p
 
 
@@ -855,7 +956,7 @@ def fetch_maybe_render(url: str, timeout: float = 25.0, do_render: bool = False)
     """
     res = fetch(url, timeout=timeout)
     shell = (res.status == 200 and not res.error and res.bytes_in > 0
-             and len(res.text or "") < 200)
+             and len(res.text or "") < EMPTY_TEXT)
     if do_render and (res.wall or not res.ok or shell):
         ren = render(res.final_url or res.url)
         if ren.status == 200 and not ren.error:

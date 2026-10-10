@@ -56,6 +56,20 @@ are best-effort. If the strict pass yields nothing readable, the parse is
 repeated with chrome suppression disabled; a page recovered that way reports
 `parse=no-chrome` rather than looking like a page that never needed relaxing.
 
+The same pass also catches the *half* failure: chrome that keeps the head of the
+article and eats its tail. That used to ship a stub marked `parse=strict` — a
+page that said nothing about itself, so it read as a page that simply had little
+text. `tests/probe_truncation.py` measures it: over 3,000 destructive mutations
+of nine real pages, 14 cases kept a minority of the content root while
+suppression removed the rest, losing up to 99% of the article, silently. The
+gate is the same question the ladder already asks about nothing at all — "was
+more thrown away than kept, counting only text dropped from *inside* the
+content root?" — plus a floor: the loss has to be bigger than an empty page
+(200 chars), because a share is meaningless on a four-word document. When it
+fires, the page is returned whole and named `parse=trunc-root:NN%`, the share
+that was lost. No honest page in the nine comes near the gate (worst: npm at
+23%, whose readme keeps its sidebars inside `<main>`).
+
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
 abandoned whenever it would keep nothing, so a rung-2 result can never be empty
@@ -150,8 +164,10 @@ value; an extraction that was attempted and failed must not read like one that
 was never attempted.
 
 Anything the extraction had to relax is named on the row: `[parse=no-chrome]`
-when chrome suppression had to be switched off, `[partial: <error>]` when the
-HTML parser gave up part-way. An unmarked row means the strict pass ran clean.
+when chrome suppression had to be switched off because nothing survived it,
+`[parse=trunc-root:88%]` when it was switched off because it had eaten 88% of
+the content root's readable text, `[partial: <error>]` when the HTML parser gave
+up part-way. An unmarked row means the strict pass ran clean.
 
 Input is one URL per line, blank lines and `#`-comment lines skipped, duplicates
 collapsed (first occurrence wins). `#` is deliberately **not** an inline comment
@@ -256,12 +272,15 @@ agent runs with — use an absolute path.)
 
 ## Status
 
-`0.6.0`. Content is scoped to the page's own root, narrowed by one measured
-nesting rule, and every result names the scope it used; 61 offline tests green
-(was 57). The extraction's fallbacks are named too: `scope=none` (no root),
+`0.7.0`. Content is scoped to the page's own root, narrowed by one measured
+nesting rule, and every result names the scope it used; 72 offline tests green
+(was 64). The extraction's fallbacks are named too: `scope=none` (no root),
 `scope=empty-root` (a root was found and the cut kept nothing), `parse=no-chrome`
-(chrome suppression had to be switched off), `parse_error` (the parser gave up
-part-way). The ladder's unreachable third rung was deleted after 6,000
+(chrome suppression had to be switched off because nothing survived it),
+`parse=trunc-root:NN%` (it was switched off because it had eaten NN% of the
+content root — the silent truncation, measured at up to 99% of the article over
+3,000 mutations in `tests/probe_truncation.py`), and `parse_error` (the parser
+gave up part-way). The ladder's unreachable third rung was deleted after 6,000
 destructive mutations of six real pages reached it 400 times and rescued none
 (`tests/probe_fallback.py`).
 

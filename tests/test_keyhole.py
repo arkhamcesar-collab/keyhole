@@ -345,6 +345,112 @@ class TestGuaranteeAudit(unittest.TestCase):
         self.assertEqual(a.scope, "main")
 
 
+class TestTruncationGate(unittest.TestCase):
+    """A suppression that keeps the head of the article and eats its tail used to
+    ship a stub labelled `parse=strict` — the silent truncation: the empty success
+    wearing the costume of a page that simply had little text. Measured by
+    tests/probe_truncation.py over 3,000 mutations of nine real pages, up to 99%
+    of the root's readable text went missing that way, 14 times, silently. These
+    are the shapes that hold the gate honest.
+    """
+
+    TAIL = "TAIL_WORD " * 200
+    # A suppression opened inside the root and never closed: the classic shape.
+    TAIL_EATEN = ('<body><main><p>HEAD_OF_THE_ARTICLE</p>'
+                  '<div aria-hidden="true">' + TAIL + '</body>')
+
+    def test_a_chrome_tag_that_eats_the_tail_is_rescued_and_named(self):
+        strict = keyhole._reader(self.TAIL_EATEN)
+        # The strict pass kept *something* — that is precisely why the old gate
+        # ("did anything survive?") let it through and the page read as a short one.
+        self.assertTrue(keyhole._has_content(strict))
+        self.assertGreater(keyhole.root_lost_share(strict), keyhole.ATE_ROOT)
+        rung = keyhole.analyze(self.TAIL_EATEN).rung
+        self.assertTrue(rung.startswith("trunc-root:"), rung)
+        self.assertIn("TAIL_WORD", keyhole.html_to_markdown(self.TAIL_EATEN))
+        # And it is named where a caller will see it, not only in the reader.
+        res = keyhole.Result(url="https://x.dev", parse=rung)
+        self.assertIn(f"[parse={rung}]", keyhole.parse_notes(res))
+
+    def test_the_share_it_names_is_the_share_it_measured(self):
+        """A number in a name is a claim: `trunc-root:99%` says 99% of the root's
+        readable text was thrown away. Fiction there is worse than silence."""
+        strict = keyhole._reader(self.TAIL_EATEN)
+        printed = keyhole.analyze(self.TAIL_EATEN).rung.split(":")[1].rstrip("%")
+        self.assertEqual(int(printed),
+                         round(keyhole.root_lost_share(strict) * 100))
+        self.assertGreaterEqual(int(printed), keyhole.ATE_ROOT * 100)
+
+    def test_chrome_legitimately_inside_the_root_does_not_trip_the_gate(self):
+        """nav, asides and footers *should* go — including when the page's own
+        root wraps them. Only losing more than was kept is a truncation, and no
+        clean page in the probe's nine comes near the gate (worst: npm, 23%)."""
+        body = "ARTICLE " * 100
+        html = (f'<body><main><p>{body}</p><aside>RELATED LINKS</aside>'
+                f'<p>{body}</p></main></body>')
+        r = keyhole.analyze(html)
+        self.assertEqual(r.rung, "strict")
+        self.assertNotIn("RELATED LINKS", keyhole._text_of(r))
+        self.assertLessEqual(keyhole.root_lost_share(r), keyhole.ATE_ROOT)
+
+    def test_a_script_inside_the_root_is_dropped_not_lost(self):
+        """The first version of this counter charged every suppressed byte to
+        chrome, so an inline `<script>` inside `<main>` counted as article text
+        thrown away — MDN then read 40% and GitHub 90%, both measuring their own
+        code. Losing the page and dropping a script are different events, which
+        is why the tag stack carries *why* it suppressed, not just that it did."""
+        html = ('<body><main><p>SHORT ARTICLE</p>'
+                '<script>var x = "' + "padding " * 500 + '";</script>'
+                '<style>.a{color:red}</style></main></body>')
+        p = keyhole._reader(html)
+        self.assertEqual(p.sup_in_root, 0)
+        self.assertEqual(keyhole.root_lost_share(p), 0.0)
+        self.assertEqual(keyhole.analyze(html).rung, "strict")
+        self.assertIn("SHORT ARTICLE", keyhole._text_of(p))
+
+    def test_nothing_survived_says_no_chrome_not_trunc_root(self):
+        """The two relaxations are two different facts — nothing survived, or a
+        minority survived and was discarded. Giving them one symbol would be the
+        `scope=""` mistake over again."""
+        html = '<body><div class="sidebar"><p>ONLY_TEXT_ON_PAGE</p></div></body>'
+        p = keyhole.analyze(html)
+        self.assertEqual(p.rung, "no-chrome")
+        self.assertIn("ONLY_TEXT_ON_PAGE", keyhole._text_of(p))
+
+    def test_the_gate_never_trips_on_the_audited_fixtures(self):
+        """Every fixture in probe_rules is a shape keyhole must handle *without*
+        relaxing. A gate that fires on one of them is eating pages that were
+        already right."""
+        for name, html in probe_rules.FIXTURES.items():
+            p = keyhole._reader(html)
+            self.assertFalse(keyhole.ate_the_root(p),
+                             f"the gate trips on fixture {name!r}: "
+                             f"{keyhole.root_lost_share(p):.0%} of the root lost")
+
+    def test_a_tiny_root_losing_most_of_itself_is_not_a_truncation(self):
+        """`<main><p>REAL</p><div aria-hidden>hidden</div></main>` loses 60% of
+        its root — over the share gate — and there is no article to rescue: four
+        words kept, six dropped. The share is scale-free and meaningless at that
+        size, which is why the gate also requires a loss bigger than the 200
+        characters this tool already calls an empty page."""
+        html = probe_rules.FIXTURES["aria-hidden-content"]
+        p = keyhole._reader(html)
+        self.assertGreater(keyhole.root_lost_share(p), keyhole.ATE_ROOT)
+        self.assertLessEqual(p.sup_in_root, keyhole.EMPTY_TEXT)
+        self.assertFalse(keyhole.ate_the_root(p))
+        self.assertEqual(keyhole.analyze(html).rung, "strict")
+
+    def test_the_probe_itemises_the_same_drops_the_gate_counts(self):
+        """probe_truncation's instrument attributes each in-root drop to a rule;
+        the gate counts them. If the attribution drifts from the shipped reason
+        tracking, the probe's record of *why the gate sits at 50%* is fiction."""
+        import probe_truncation
+        for name, html in list(probe_rules.FIXTURES.items()) + [("tail-eaten", self.TAIL_EATEN)]:
+            pr = keyhole._reader(html, probe_truncation._Trunc)
+            self.assertEqual(sum(pr.by_label.values()), pr.sup_in_root, name)
+            self.assertEqual(keyhole._reader(html).sup_in_root, pr.sup_in_root, name)
+
+
 class TestWallClassification(unittest.TestCase):
 
     def test_cloudflare_1010_is_named_not_returned(self):
