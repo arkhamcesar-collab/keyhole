@@ -68,7 +68,30 @@ content root?" — plus a floor: the loss has to be bigger than an empty page
 (200 chars), because a share is meaningless on a four-word document. When it
 fires, the page is returned whole and named `parse=trunc-root:NN%`, the share
 that was lost. No honest page in the nine comes near the gate (worst: npm at
-23%, whose readme keeps its sidebars inside `<main>`).
+23%, whose readme keeps its sidebars inside `<main>`). The margin did not survive a
+corpus nobody curated (`tests/probe_gate_pos.py`, HN + Lobsters + random Wikipedia):
+on `en.wikipedia.org/wiki/Torrebaja` the gate fires at 62% and the strict article is
+**complete** — what suppression removed was the municipality navbox, the authority
+control block and the categories, chrome that lives inside the same container the
+result comes from. Three amount-based counters were measured against it and none
+separated the two cases: the fix that saved the honest page is the fix that let the
+real damage through.
+
+**Why a suppression failed, not how much it ate** (`tests/probe_reason.py`) — the
+last untried reading, and it fails differently. Every in-root suppression frame ends
+`matched` (its own end tag), `unwind` (an enclosing tag's) or `open` (never). On the
+62 measurable honest pages *every* frame is `matched` — 41,739 of 41,794 characters,
+Torrebaja's navbox included — so "a frame that did not close by its own tag" fires 0
+times there and catches 14 of the 20 real truncations. It is not a fact about the
+page: the same injected tag lands `matched` or `unwind` depending on how deep the
+parser's stack had it, and the ending tracks the size — `matched` frames ate 484 to
+1,266 characters on average, `unwind` frames 7,128 to 8,369. The prose counter
+(`ptext`: text lost from inside a suppressed `<p>`) catches 18 of 20 with 0 fires on
+honest pages; the two *disagree* on which cases they miss, and their union catches
+**20 of 20**, with 1 mutation in 1,500 where nothing was lost (the shipped gate
+manages 34) and 0 fires on the honest corpus. Measured, not built: a gate made of
+that union needs the reader to track frame endings and suppressed prose, which is a
+change to `keyhole.py` and not a line in a probe.
 
 The ladder used to have a third rung, "no heuristics at all". It was measured
 and removed: the relaxed pass differs from it only in scoping, and the cut is
@@ -229,13 +252,18 @@ keyhole.write_corpus(keyhole.run_batch(urls), "corpus/")
 ## Tests
 
 ```bash
-python tests/test_keyhole.py                  # offline, 64 tests
+python tests/test_keyhole.py                  # offline, 72 tests
 KEYHOLE_NET_TESTS=1 python tests/test_keyhole.py   # + live network checks
 python tests/probe_mcp.py                     # drives the MCP server over stdio
 python tests/probe_density.py                 # measures candidate extraction rules, live
 python tests/probe_tighten.py                 # measures the tightening rule on/off, live
 python tests/probe_fallback.py --fuzz 6000    # measures the fallback ladder, live
 python tests/probe_rules.py --fuzz 3000       # audits which guarantees actually fire, live
+python tests/probe_truncation.py --fuzz 1500  # the gate's own populations, live
+python tests/probe_gate_span.py --fuzz 1500   # candidate counters for the gate, live
+python tests/probe_gate_pos.py --fuzz 1500    # where the loss falls, and whose it is, live
+python tests/probe_counts.py --fuzz 600       # which probes print a measurement vs a theorem
+python tests/probe_reason.py --fuzz 1500      # why a suppression failed, not how much it ate
 ```
 
 ## Use it from an agent (MCP)
